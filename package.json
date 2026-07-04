@@ -8,12 +8,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test app/lib/grounding.test.mjs"
+    "test": "node --test app/lib/grounding.test.mjs app/lib/sigmaTemplate.test.mjs app/lib/ruleTranscribe.test.mjs",
+    "harness": "node scripts/harness.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
+    "pdfjs-dist": "^4.7.76",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "pdfjs-dist": "^4.7.76"
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "js-yaml": "^5.2.1"
   }
 }
