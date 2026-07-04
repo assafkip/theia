@@ -47,6 +47,7 @@ const DEFAULT_PDFS = [
   "openssh_authbypass.pdf",
   "shinyhunters_threat_brief.pdf",
   "cyber_triage_dfir.pdf",
+  "handala.pdf",
 ].map((f) =>
   path.resolve(
     process.env.HOME,
