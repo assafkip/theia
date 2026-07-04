@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      # Deterministic gates only — no API key, no network. This is the ship gate
+      # for the grounding + rule-emitter core (grounding / sigmaTemplate /
+      # ruleTranscribe). The BYOK LLM path is exercised out-of-band (scripts/smoke-live.mjs).
+      - run: npm test
+      - run: npm run build

@@ -227,3 +227,73 @@ test("global/private YARA modifiers are part of the rule head", () => {
   assert.equal(rules.length, 1);
   assert.match(rules[0].text, /global rule G/);
 });
+
+// Regression for the real-world shapes validated live against SigmaHQ +
+// signature-base (see PR #1 issue #2). Uses SMALL authored rules with the same
+// STRUCTURE (not the third-party licensed text): a full-bodied unfenced Sigma
+// with related:/falsepositives:/tags:, and a fenced multi-rule YARA with an
+// import prelude, a comment, and hex/string braces.
+test("full-body unfenced Sigma (related/falsepositives/tags) is captured whole", () => {
+  const doc = [
+    "Detection content:",
+    "",
+    "title: Suspicious Download Via Certutil",
+    "id: 19b08b1c-861d-4e75-a1ef-ea0c1baf202b",
+    "status: test",
+    "related:",
+    "    - id: 13e6fe51-d478-4c7e-b0f2-6da9b400a829",
+    "      type: similar",
+    "logsource:",
+    "    category: process_creation",
+    "    product: windows",
+    "detection:",
+    "    selection:",
+    "        Image|endswith: '\\certutil.exe'",
+    "        CommandLine|contains: 'urlcache'",
+    "    condition: selection",
+    "falsepositives:",
+    "    - Legitimate administrative use",
+    "level: medium",
+    "tags:",
+    "    - attack.command-and-control",
+    "",
+    "Prose resumes after the rule.",
+  ].join("\n");
+  const rules = transcribeRules(doc);
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0].kind, "sigma");
+  assert.match(rules[0].text, /title: Suspicious Download Via Certutil/);
+  assert.match(rules[0].text, /tags:/); // captured through the LAST key, not truncated
+  assert.match(rules[0].text, /attack\.command-and-control/);
+  assert.ok(!rules[0].text.includes("Prose resumes")); // stops at prose
+});
+
+test("fenced multi-rule YARA with import prelude + comment + hex/string braces", () => {
+  const doc = [
+    "Appendix:",
+    "```",
+    'import "pe"',
+    "",
+    "/* first family */",
+    "rule Fam_A : APT {",
+    "  strings:",
+    "    $h = { 4d 5a 90 00 }",
+    '    $s = "cred{dump}"',
+    "  condition:",
+    "    $h at 0 and $s",
+    "}",
+    "",
+    "rule Fam_B {",
+    "  condition:",
+    "    pe.number_of_sections > 2",
+    "}",
+    "```",
+  ].join("\n");
+  const rules = transcribeRules(doc);
+  assert.equal(rules.length, 1); // the whole fenced appendix, one block
+  assert.equal(rules[0].kind, "yara");
+  assert.match(rules[0].text, /import "pe"/); // prelude preserved (fenced path)
+  assert.match(rules[0].text, /rule Fam_A/);
+  assert.match(rules[0].text, /rule Fam_B/);
+  assert.ok(rules[0].text.trimEnd().endsWith("}"));
+});
