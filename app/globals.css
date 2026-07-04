@@ -54,3 +54,26 @@ th { color: var(--dim); font-weight: 500; }
 td.ft { color: var(--teal-ink); font-family: var(--mono); white-space: nowrap; }
 td.val code { font-family: var(--mono); word-break: break-all; }
 td.span { color: var(--dim); }
+
+/* PRD-002 detection-rule surfaces (transcribed + atomic Sigma). */
+.notegood { background: rgba(69,201,186,.08); border: 1px solid rgba(69,201,186,.3);
+  color: var(--teal-ink); border-radius: 8px; padding: 9px 13px; margin: 0 0 12px; font-size: 13px; }
+.notewarn { background: rgba(217,164,65,.1); border: 1px solid rgba(217,164,65,.35);
+  color: var(--warn); border-radius: 8px; padding: 9px 13px; margin: 0 0 12px; font-size: 13px; }
+.notewarn strong { color: #f0c069; }
+.rulecard { border-top: 1px solid var(--line); padding: 12px 0; }
+.rulecard:first-of-type { border-top: none; }
+.rulehead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.rulehead button { margin-left: auto; background: none; border: 1px solid var(--line);
+  color: var(--ink); border-radius: 6px; padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+.kind { display: inline-block; border-radius: 4px; font-family: var(--mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: .5px; padding: 2px 7px; background: var(--teal); color: #eafffb; }
+.kind.yara { background: #7a5cc4; }
+.kind.snort { background: #b5683f; }
+.assumed { color: var(--dim); font-size: 12px; }
+.assumed code { font-family: var(--mono); color: var(--teal-ink); }
+.rulebody { background: #0c0e10; border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; margin: 0; overflow-x: auto; font-family: var(--mono); font-size: 12.5px;
+  line-height: 1.45; white-space: pre; }
+.ruletrace { color: var(--dim); font-size: 12px; margin-top: 6px; }
+.ruletrace code { font-family: var(--mono); color: var(--ink); word-break: break-all; }

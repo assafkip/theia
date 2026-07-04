@@ -8,7 +8,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test app/lib/grounding.test.mjs app/lib/sigmaTemplate.test.mjs"
+    "test": "node --test app/lib/grounding.test.mjs app/lib/sigmaTemplate.test.mjs app/lib/ruleTranscribe.test.mjs",
+    "harness": "node scripts/harness.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",

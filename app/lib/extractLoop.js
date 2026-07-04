@@ -11,6 +11,8 @@
 import { callMessage } from "./anthropic.js";
 import { SYSTEM_PROMPT, buildUserMessage } from "./extractPrompt.mjs";
 import { groundExtraction } from "./grounding.mjs";
+import { atomicRulesFromExtraction } from "./sigmaTemplate.mjs";
+import { transcribeRules } from "./ruleTranscribe.mjs";
 
 // Model tiers mirror the coach: a cheap tier for free/acquisition, Opus for paid.
 export const MODELS = {
@@ -62,6 +64,14 @@ export async function runExtraction({ apiKey, model, documentText, signal }) {
   const parsed = parseJson(text);
   const grounded = groundExtraction(parsed, documentText);
 
+  // Detection-rule support (PRD-002), both deterministic:
+  //  - atomic_rules: atomic Sigma templated from the GROUNDED IOC set (the LLM
+  //    never authors these — a fixed table slots a grounded value into a shape).
+  //  - transcribed_rules: Sigma/YARA/Snort blocks the advisory itself shipped,
+  //    pulled verbatim from the document text and grounded.
+  const atomic_rules = atomicRulesFromExtraction(grounded, documentText);
+  const transcribed_rules = transcribeRules(documentText);
+
   return {
     exec_summary: Array.isArray(parsed.exec_summary) ? parsed.exec_summary : [],
     actors: Array.isArray(parsed.actors) ? parsed.actors : [],
@@ -70,6 +80,8 @@ export async function runExtraction({ apiKey, model, documentText, signal }) {
     malware: grounded.malware,
     unbound_iocs: grounded.unbound_iocs,
     dropped_ungrounded: grounded._dropped_ungrounded,
+    atomic_rules,
+    transcribed_rules,
     meta: {
       model,
       cost_usd: Number(costUsd(model, usage).toFixed(4)),

@@ -58,6 +58,16 @@ export default function Page() {
     setTimeout(() => setStatus(""), 1500);
   };
 
+  const copyText = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus(`Copied ${label} to clipboard.`);
+    } catch {
+      setStatus(`Could not copy — select the ${label} text and copy manually.`);
+    }
+    setTimeout(() => setStatus(""), 2000);
+  };
+
   return (
     <main className="wrap">
       <header>
@@ -139,6 +149,38 @@ export default function Page() {
           {result.unbound_iocs.length > 0 && (
             <Block title={`Standalone IOCs (${result.unbound_iocs.length})`}>
               <IocTable rows={result.unbound_iocs} />
+            </Block>
+          )}
+
+          {(result.transcribed_rules?.length ?? 0) > 0 && (
+            <Block title={`Rules found in this report — verbatim from the vendor (${result.transcribed_rules.length})`}>
+              <p className="notegood">These are the report&apos;s own Sigma/YARA/Snort rules, pulled byte-for-byte from the document. Not KTLYST output.</p>
+              {result.transcribed_rules.map((r, i) => (
+                <div key={i} className="rulecard">
+                  <div className="rulehead">
+                    <span className={`kind ${r.kind}`}>{r.kind}</span>
+                    <button onClick={() => copyText(r.text, `${r.kind} rule`)}>Copy</button>
+                  </div>
+                  <pre className="rulebody">{r.text}</pre>
+                </div>
+              ))}
+            </Block>
+          )}
+
+          {(result.atomic_rules?.length ?? 0) > 0 && (
+            <Block title={`IOC sweep snippets — Sigma starting points (${result.atomic_rules.length})`}>
+              <p className="notewarn">Single-field IOC sweeps generated from grounded observables. These are hunt starting points, <strong>not deployable detections</strong> and not detection engineering. The assumed logsource/field is a guess — tune it, and false positives, for your environment before use.</p>
+              {result.atomic_rules.map((r, i) => (
+                <div key={i} className="rulecard">
+                  <div className="rulehead">
+                    <span className="kind sigma">sigma</span>
+                    <span className="assumed">assumes <code>{r.category}</code> · <code>{r.field}</code> ({r.match})</span>
+                    <button onClick={() => copyText(r.rule_yaml, "Sigma rule")}>Copy</button>
+                  </div>
+                  <pre className="rulebody">{r.rule_yaml}</pre>
+                  <div className="ruletrace">from grounded {r.field_type}: <code>{r.value}</code> — “{r.source_span}”</div>
+                </div>
+              ))}
             </Block>
           )}
         </section>
