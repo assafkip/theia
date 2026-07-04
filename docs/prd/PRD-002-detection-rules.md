@@ -1,6 +1,6 @@
 # PRD-002 — Detection-rule support (transcribe + atomic Sigma template)
 
-Status: reviewed (Codex adversarial review applied — see §10)
+Status: BUILT + deployed (see §11 for verification)
 Repo: `~/projects/ktlyst-extract` (own git, Next 15, Vercel, live at https://ktlyst-extract.vercel.app)
 Builds on: PRD-001 phase 1 (commit `dbf2a9d` — BYOK extract loop + deterministic v007 grounding)
 
@@ -140,3 +140,12 @@ Codex adversarial review ran on this PRD before implementation (§10) and runs p
 - **[minor] raw-vs-normalized display** — resolved. Copy the raw slice (§2 F1).
 - **[minor] dedupe/ordering missing** — fold-in. Dedupe + stable sort (§2 F2).
 - **[minor] weak manual acceptance** — fold-in. All-4-PDF local harness + synthetic fixtures + live check (§6).
+
+## 11. Verification (build phase complete)
+
+- **§6.1 node --test:** 37/37 green (`grounding` 9, `sigmaTemplate` 12, `ruleTranscribe` 16). Includes the critical empty-span + U+200B gate, adversarial-YAML round-trip, taxonomy allowlist, byte-for-byte transcribe, range de-nest.
+- **§6.2 npm run build:** clean (Next 15, route `/` 6.32 kB).
+- **§6.3 Vercel prod:** deployed READY, aliased to https://ktlyst-extract.vercel.app (dpl_F1pD8BZBrhJjhqBjK3PSNEvwgfky), curl 200.
+- **§6.4 local harness:** ALL GREEN across all 4 advisory PDFs (unit42, openssh, shinyhunters, cyber_triage) + a 3-kind fixture — atomic emits on grounded samples, fabricated/empty-span rejected, all transcribed slices verbatim, wired `atomicRulesFromExtraction` shape ok. The 4 PDFs ship no appendix rules (transcribed=0, honest); the fixture proves the transcribe path.
+- **Codex:** PRD adversarial review (12 findings, all dispositioned) + per-diff review on both implementation commits (7 + 9 findings, all fixed/dispositioned) + final cross-cutting review (0 findings).
+- **Founder-gated remainder:** the live in-browser LLM run (§6.4 second half) needs the founder's Anthropic key in the browser; my environment cannot run the BYOK LLM half. Deterministic paths are proven on real advisory bytes via the harness.
