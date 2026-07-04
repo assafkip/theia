@@ -1,0 +1,19 @@
+{
+  "name": "ktlyst-extract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Drop a threat advisory PDF, get structured source-grounded intel. BYOK web app mirroring the interview-coach capability pattern (LLM proposes, deterministic grounding is truth).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test app/lib/grounding.test.mjs"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "pdfjs-dist": "^4.7.76"
+  }
+}
