@@ -77,8 +77,8 @@ export default function Page() {
     <main className="wrap">
       <header>
         <p className="eyebrow">Theia</p>
-        <h1>Only what&apos;s in the report.</h1>
-        <p className="sub">Paste a threat advisory. Theia pulls every IOC, named threat, and vendor rule, each tied to the exact line it came from. Fixed rules, no model, so the same report always gives the same output. What it can&apos;t find in the text, it drops.</p>
+        <h1>Pull the IOCs out of any threat advisory.</h1>
+        <p className="sub">Paste a link, a PDF or a web page. Theia extracts every IOC, named threat, and the vendor&apos;s own detection rules, each tied to the exact line it came from. It runs on fixed rules, not a model, so the same report always gives the same output. Anything it can&apos;t find in the text, it drops.</p>
         <div className="proof" aria-hidden="true">
           <span className="pv"><code>185.230.63.107</code><span className="ptag">ip · straight from the source</span></span>
           <span className="pspan">&ldquo;C2 beaconing to 185.230.63.107 over port 443, rotating endpoints roughly every ninety minutes.&rdquo;</span>
