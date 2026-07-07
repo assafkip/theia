@@ -76,7 +76,7 @@ export default function Page() {
   return (
     <main className="wrap">
       <header>
-        <p className="eyebrow">KTLYST Extract</p>
+        <p className="eyebrow">Theia</p>
         <h1>Threat advisory in, grounded intel out.</h1>
         <p className="sub">Paste a link to a threat advisory (a PDF or a web page). Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Deterministic, no LLM, no signup.</p>
       </header>
@@ -135,7 +135,7 @@ function Landing() {
           <div className="card"><span className="tag">typed</span><h3>IOCs</h3><p>IP, domain, URL, hash, CVE, email. Defang-aware, refanged for you. TLD and length validation cut the noise.</p></div>
           <div className="card"><span className="tag">gazetteer</span><h3>Named threats</h3><p>Actors, tools, malware matched against MITRE ATT&amp;CK + Malpedia. A match means the name is present, not attributed.</p></div>
           <div className="card"><span className="tag">printed</span><h3>ATT&amp;CK IDs</h3><p>Only the technique IDs the vendor actually wrote down, asserted as ATT&amp;CK only when in the snapshot.</p></div>
-          <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not KTLYST output.</p></div>
+          <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not Theia output.</p></div>
           <div className="card"><span className="tag">templated</span><h3>IOC sweep snippets</h3><p>Single-field Sigma starting points from grounded IOCs. Hunt starters, not deployable detections. The assumed field is shown to tune.</p></div>
           <div className="card"><span className="tag">export</span><h3>CSV export</h3><p>One click pulls every finding into a CSV: type, value, count, and the source span that proves each one.</p></div>
         </div>
@@ -165,7 +165,7 @@ function Landing() {
       </section>
 
       <footer className="foot">
-        <span>KTLYST Extract. The fact layer, free.</span>
+        <span>Theia. The fact layer, free.</span>
         <span className="mono">100% deterministic · no signup · no LLM</span>
       </footer>
     </>
@@ -196,7 +196,7 @@ function exportCsv(result) {
     rows.push(["attack_id", "technique", a.id, "", "", a.source_span || "", a.name || ""]);
   }
   for (const r of result.transcribed_rules) {
-    rows.push(["vendor_rule", r.kind, r.text, "", "", "", "verbatim from vendor, not KTLYST output"]);
+    rows.push(["vendor_rule", r.kind, r.text, "", "", "", "verbatim from vendor, not Theia output"]);
   }
   for (const r of result.atomic_rules) {
     rows.push(["ioc_sweep", "sigma", r.rule_yaml, "", "", r.source_span || "", `assumes ${r.category}/${r.field} (${r.match}) from ${r.field_type} ${r.value}`]);
@@ -266,7 +266,7 @@ function Result({ result, copyText }) {
 
       {result.transcribed_rules.length > 0 && (
         <Block title={`Rules found in this report — verbatim from the vendor (${result.transcribed_rules.length})`}>
-          <p className="notegood">The report&apos;s own Sigma/YARA/Snort rules, pulled byte-for-byte when structurally recognized. <em>Not KTLYST output.</em></p>
+          <p className="notegood">The report&apos;s own Sigma/YARA/Snort rules, pulled byte-for-byte when structurally recognized. <em>Not Theia output.</em></p>
           {result.transcribed_rules.map((r, i) => (
             <div key={i} className="rulecard">
               <div className="rulehead">
