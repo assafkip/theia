@@ -9,9 +9,12 @@ printed, the vendor's own Sigma/YARA/Snort rules, and single-field Sigma sweep
 snippets. Every item is a verbatim string from the document, shown with its source
 span.
 
-**100% deterministic, 100% client-side.** No LLM, no API key, no server, no
-network — extraction runs entirely in your browser. Nothing leaves your machine.
-Free, no signup. (PRD-003 removed the LLM extraction pass; see below.)
+**100% deterministic. No LLM, no API key, no signup, free.** Extraction is a
+fixed set of rules, not a model, and it runs in your browser. A PDF you upload is
+read locally and never leaves your machine. A URL you paste is fetched
+server-side (most advisory sites cannot be fetched directly from the browser, due
+to CORS), then extracted in your browser. (PRD-003 removed the LLM extraction
+pass; see below.)
 
 **Fact layer, not opinion layer.** This tool asserts what a report *contains* —
 never what it *means*, whether it is malicious, or how to detect it. That

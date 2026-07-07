@@ -51,6 +51,17 @@ h1 {
   display: inline-flex; align-items: center; gap: 6px;
 }
 
+/* URL intake row */
+.urlrow { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+.ordiv { color: var(--dimmer); font-size: 13px; font-family: var(--mono); }
+.urlinput {
+  flex: 1; min-width: 220px; border: 1px solid var(--line-strong); border-radius: 7px;
+  padding: 11px 13px; font: inherit; font-size: 14px; color: var(--ink); background: var(--panel);
+}
+.urlinput::placeholder { color: var(--dimmer); }
+.urlinput:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-wash); }
+.urlbtn { border: 1px solid #eaa400; }
+
 .status { color: var(--amber-ink); margin: 20px 2px; font-size: 14px; }
 .error {
   color: var(--danger); background: var(--danger-wash);

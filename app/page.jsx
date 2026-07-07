@@ -13,33 +13,73 @@ import { runExtraction, defang } from "./lib/extractLoop.js";
 
 export default function Page() {
   const [fileName, setFileName] = useState("");
+  const [url, setUrl] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // Shared tail: given document text, run the deterministic extractor client-side.
+  const extractFromText = useCallback(async (text, tooShortMsg) => {
+    if (text.trim().length < 200) {
+      setError(tooShortMsg);
+      setBusy(false);
+      return;
+    }
+    setStatus("Extracting…");
+    const r = await runExtraction({ documentText: text });
+    setResult(r);
+    setStatus("");
+  }, []);
+
   const onFile = useCallback(async (file) => {
     if (!file) return;
-    setError(""); setResult(null); setFileName(file.name);
+    setError(""); setResult(null); setUrl(""); setFileName(file.name);
     setBusy(true);
     try {
       setStatus("Reading PDF…");
       const text = await pdfToText(file);
-      if (text.trim().length < 200) {
-        setError("Could not read enough text from this PDF (scanned/image-only PDFs need OCR — not in this build).");
-        setBusy(false); return;
-      }
-      setStatus("Extracting…");
-      const r = await runExtraction({ documentText: text });
-      setResult(r);
-      setStatus("");
+      await extractFromText(text, "Could not read enough text from this PDF (scanned/image-only PDFs need OCR, not in this build).");
     } catch (e) {
       setError(e.message || String(e));
       setStatus("");
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [extractFromText]);
+
+  // URL intake: fetched server-side (browser CORS blocks most advisory sites),
+  // then extracted client-side. Uploaded PDFs still never leave the browser.
+  const onUrl = useCallback(async () => {
+    const u = url.trim();
+    if (!u) return;
+    setError(""); setResult(null); setFileName("");
+    setBusy(true);
+    try {
+      setStatus("Fetching…");
+      const resp = await fetch("/api/fetch-url", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: u }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || `Fetch failed (${resp.status}).`);
+      let text;
+      if (data.type === "pdf") {
+        setStatus("Reading PDF…");
+        const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
+        text = await pdfToText(bytes.buffer);
+      } else {
+        text = data.text || "";
+      }
+      await extractFromText(text, "Could not read enough text from that URL (it may be a login page, image-only, or blocked).");
+    } catch (e) {
+      setError(e.message || String(e));
+      setStatus("");
+    } finally {
+      setBusy(false);
+    }
+  }, [url, extractFromText]);
 
   const copyText = async (text, label) => {
     try {
@@ -55,8 +95,8 @@ export default function Page() {
     <main className="wrap">
       <header>
         <p className="eyebrow">KTLYST Extract</p>
-        <h1>Threat PDF in, grounded intel out.</h1>
-        <p className="sub">Drop a threat advisory PDF. Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Runs entirely in your browser — no key, no signup, nothing leaves your machine.</p>
+        <h1>Threat advisory in, grounded intel out.</h1>
+        <p className="sub">Drop a threat advisory PDF or paste a link. Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Deterministic, no LLM, no signup.</p>
       </header>
 
       <section className="controls">
@@ -66,7 +106,22 @@ export default function Page() {
               onChange={(e) => onFile(e.target.files?.[0])} />
             {fileName ? `↻ ${fileName}` : "Choose PDF"}
           </label>
-          <span className="microtrust">100% deterministic · client-side · no LLM</span>
+          <span className="microtrust">100% deterministic · no LLM · no signup</span>
+        </div>
+        <div className="urlrow">
+          <span className="ordiv">or</span>
+          <input
+            type="url"
+            className="urlinput"
+            placeholder="Paste an advisory URL (PDF or web page)"
+            value={url}
+            disabled={busy}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") onUrl(); }}
+          />
+          <button className={`drop urlbtn ${busy || !url.trim() ? "disabled" : ""}`} onClick={onUrl} disabled={busy || !url.trim()}>
+            Extract
+          </button>
         </div>
       </section>
 
@@ -115,10 +170,10 @@ function Landing() {
       <section className="section">
         <div className="section-head">
           <h2 className="sech">How it works</h2>
-          <p>No key, no LLM, no server, no network. Extraction runs entirely in your browser.</p>
+          <p>No key, no LLM, no signup. The extractor is a fixed set of rules, not a model.</p>
         </div>
         <div className="steps">
-          <div className="step"><span className="n">1</span><h3>Drop the advisory</h3><p>Choose any threat-advisory PDF. The file never leaves your machine.</p></div>
+          <div className="step"><span className="n">1</span><h3>Drop it or link it</h3><p>Upload a threat-advisory PDF, or paste a link to one. PDF or web page, both work.</p></div>
           <div className="step"><span className="n">2</span><h3>Deterministic extract</h3><p>Regex and curated matching pull only what is literally in the text. Same input, same output, every time.</p></div>
           <div className="step"><span className="n">3</span><h3>Every fact linked</h3><p>Each item ships with the verbatim span that proves it. Anything not provably in the source is dropped.</p></div>
         </div>
@@ -136,8 +191,8 @@ function Landing() {
       </section>
 
       <footer className="foot">
-        <span>KTLYST Extract — the fact layer, free and client-side.</span>
-        <span className="mono">100% deterministic · no signup · nothing leaves your machine</span>
+        <span>KTLYST Extract. The fact layer, free.</span>
+        <span className="mono">100% deterministic · no signup · no LLM</span>
       </footer>
     </>
   );
