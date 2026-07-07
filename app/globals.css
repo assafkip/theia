@@ -35,6 +35,32 @@ h1 {
 }
 .sub { color: var(--dim); margin: 0; max-width: 60ch; font-size: 16px; }
 
+/* hero proof receipt — the one claim, shown live: an indicator tied to its source line */
+.proof {
+  margin-top: 26px; max-width: 640px; border: 1px solid var(--line-strong);
+  border-radius: 10px; background: var(--panel); padding: 15px 18px;
+}
+.proof .pv { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.proof .pv code { font-family: var(--mono); font-size: 15px; color: var(--ink); }
+.proof .ptag {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--amber-ink); background: var(--amber-wash); border: 1px solid #f2dca2;
+  border-radius: 999px; padding: 1px 9px;
+}
+.proof .pspan {
+  display: block; margin-top: 10px; padding-left: 13px; border-left: 2px solid var(--amber);
+  color: var(--dim); font-style: italic; font-size: 13.5px; line-height: 1.5;
+}
+
+/* analyst Q&A sections — each answers one thing the buyer actually asks */
+.qa { border-top: 1px solid var(--line); padding-top: 30px; }
+.qa .q {
+  margin: 0 0 10px; font-size: 23px; font-weight: 400; letter-spacing: -0.015em;
+  color: var(--ink); line-height: 1.2;
+}
+.qa .a { margin: 0; max-width: 64ch; color: var(--dim); font-size: 16px; line-height: 1.62; }
+.qa .a b { color: var(--ink); font-weight: 600; }
+
 /* ---- Controls / drop ---- */
 .controls { margin: 30px 0 0; }
 .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }

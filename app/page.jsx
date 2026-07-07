@@ -77,8 +77,12 @@ export default function Page() {
     <main className="wrap">
       <header>
         <p className="eyebrow">Theia</p>
-        <h1>Threat advisory in, grounded intel out.</h1>
-        <p className="sub">Paste a link to a threat advisory (a PDF or a web page). Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Deterministic, no LLM, no signup.</p>
+        <h1>Only what&apos;s in the report.</h1>
+        <p className="sub">Paste a threat advisory. Theia pulls every IOC, named threat, and vendor rule, each tied to the exact line it came from. Fixed rules, no model, so the same report always gives the same output. What it can&apos;t find in the text, it drops.</p>
+        <div className="proof" aria-hidden="true">
+          <span className="pv"><code>185.230.63.107</code><span className="ptag">ip · straight from the source</span></span>
+          <span className="pspan">&ldquo;C2 beaconing to 185.230.63.107 over port 443, rotating endpoints roughly every ninety minutes.&rdquo;</span>
+        </div>
       </header>
 
       <section className="controls">
@@ -114,48 +118,34 @@ export default function Page() {
 function Landing() {
   return (
     <>
-      <section className="demo section" id="demo">
-        <h2 className="sech">See it run</h2>
-        <div className="videoframe">
-          {/* Swap this placeholder for the recorded demo, e.g.:
-              <video controls playsInline poster="/demo-poster.jpg" src="/demo.mp4" /> */}
-          <div className="videoplaceholder">
-            <span className="playbtn" aria-hidden="true" />
-            <span className="videocap">60-second demo — paste a URL, watch it ground</span>
-          </div>
-        </div>
+      <section className="section qa">
+        <h2 className="q">Did it make anything up?</h2>
+        <p className="a">No. Every indicator is a <b>verbatim string</b> from the document, shown with the exact line that proves it. If a value is not literally in the text, byte for byte, it is dropped, not shown. Nothing is inferred, scored, or invented.</p>
       </section>
 
-      <section className="section">
-        <div className="section-head">
-          <h2 className="sech">What it pulls out</h2>
-          <p>Every item is a verbatim string from the document, carrying the exact source span that proves it. Nothing is inferred, summarized, or scored.</p>
-        </div>
-        <div className="grid">
-          <div className="card"><span className="tag">typed</span><h3>IOCs</h3><p>IP, domain, URL, hash, CVE, email. Defang-aware, refanged for you. TLD and length validation cut the noise.</p></div>
-          <div className="card"><span className="tag">gazetteer</span><h3>Named threats</h3><p>Actors, tools, malware matched against MITRE ATT&amp;CK + Malpedia. A match means the name is present, not attributed.</p></div>
-          <div className="card"><span className="tag">printed</span><h3>ATT&amp;CK IDs</h3><p>Only the technique IDs the vendor actually wrote down, asserted as ATT&amp;CK only when in the snapshot.</p></div>
-          <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not Theia output.</p></div>
-          <div className="card"><span className="tag">templated</span><h3>IOC sweep snippets</h3><p>Single-field Sigma starting points from grounded IOCs. Hunt starters, not deployable detections. The assumed field is shown to tune.</p></div>
-          <div className="card"><span className="tag">export</span><h3>CSV export</h3><p>One click pulls every finding into a CSV: type, value, count, and the source span that proves each one.</p></div>
-        </div>
+      <section className="section qa">
+        <h2 className="q">How much of it is noise?</h2>
+        <p className="a">An optional pass flags the indicators that look like <b>the vendor&apos;s own domain, a reference link, or example.com</b>, so you are not scrubbing them by hand. It only suggests. It never adds or removes anything on its own.</p>
       </section>
 
-      <section className="section">
-        <div className="section-head">
-          <h2 className="sech">How it works</h2>
-          <p>No key, no LLM, no signup. The extractor is a fixed set of rules, not a model.</p>
-        </div>
-        <div className="steps">
-          <div className="step"><span className="n">1</span><h3>Paste the link</h3><p>Paste a URL to a threat advisory. A PDF or a web page, both work.</p></div>
-          <div className="step"><span className="n">2</span><h3>Deterministic extract</h3><p>Regex and curated matching pull only what is literally in the text. Same input, same output, every time.</p></div>
-          <div className="step"><span className="n">3</span><h3>Every fact linked</h3><p>Each item ships with the verbatim span that proves it. Anything not provably in the source is dropped.</p></div>
-        </div>
+      <section className="section qa">
+        <h2 className="q">What does it miss?</h2>
+        <p className="a">It is a mechanical extractor, not a complete reader. Split or line-wrapped indicators, exotic defangs, internal hostnames, values inside screenshots, and names absent from the snapshot are <b>missed by design</b>. The source span is shown on every item so its blind spots are visible, not hidden.</p>
+      </section>
+
+      <section className="section qa">
+        <h2 className="q">Can you defend it in a review?</h2>
+        <p className="a">Yes. It runs on <b>fixed rules</b>, regex and curated matching, with no model in the loop. The same report gives the same output every time, and every indicator traces to a line. Reproducible and auditable, not a black box.</p>
+      </section>
+
+      <section className="section qa">
+        <h2 className="q">Can you get it into your tooling?</h2>
+        <p className="a">One click exports every finding to <b>CSV</b>: category, type, indicator, defanged form, count, and the source span. STIX and MISP export are on the roadmap.</p>
       </section>
 
       <section className="section">
         <div className="spine">
-          <p className="lead">Provenance, not maliciousness. This tool asserts what a report <b>contains</b> — never what it means, whether it is malicious, or how to detect it.</p>
+          <p className="lead">Provenance, not maliciousness. Theia asserts what a report <b>contains</b>, never what it means, whether it is malicious, or how to detect it. The Sigma sweeps it templates are hunt starting points, not deployable detections.</p>
           <div className="spinegrid">
             <div><h4>Drops what it can&apos;t prove</h4><p>A fact ships only if it matches the source byte-for-byte. Ungrounded claims are dropped, not shown.</p></div>
             <div><h4>Not a detection tool</h4><p>Not a SIEM, not a deployable-detection generator. Sweep snippets are hunt starting points, never shipped rules.</p></div>
