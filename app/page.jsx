@@ -1,25 +1,23 @@
 "use client";
 
-// PRD-003 — the whole product in one page, deterministic. Drop a PDF; every IOC,
-// named threat, printed ATT&CK id, and vendor rule is pulled from what the document
-// LITERALLY contains and shown with the exact source bytes. No key, no LLM, no
-// network: extraction runs entirely in your browser.
-// UI: design-room design.md (2026-07-07) — light, readable, restrained. Transform
-// spine, amber accent reserved for the primary action + grounded facts, source
-// spans collapsed behind a per-row toggle.
+// PRD-003 — the whole product in one page, deterministic. Paste an advisory URL
+// (PDF or HTML); every IOC, named threat, printed ATT&CK id, and vendor rule is
+// pulled from what the document LITERALLY contains and shown with the exact source
+// bytes. The URL is fetched server-side (app/api/fetch-url); extraction runs
+// client-side. UI: design-room design.md — light, readable, restrained. Transform
+// spine, amber accent, inline source spans, export-all-to-CSV.
 import { useState, useCallback, useMemo } from "react";
 import { pdfToText } from "./lib/pdfText.mjs";
-import { runExtraction } from "./lib/extractLoop.js";
+import { runExtraction, defang } from "./lib/extractLoop.js";
 
 export default function Page() {
-  const [fileName, setFileName] = useState("");
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  // Shared tail: given document text, run the deterministic extractor client-side.
+  // Given document text, run the deterministic extractor client-side.
   const extractFromText = useCallback(async (text, tooShortMsg) => {
     if (text.trim().length < 200) {
       setError(tooShortMsg);
@@ -32,28 +30,12 @@ export default function Page() {
     setStatus("");
   }, []);
 
-  const onFile = useCallback(async (file) => {
-    if (!file) return;
-    setError(""); setResult(null); setUrl(""); setFileName(file.name);
-    setBusy(true);
-    try {
-      setStatus("Reading PDF…");
-      const text = await pdfToText(file);
-      await extractFromText(text, "Could not read enough text from this PDF (scanned/image-only PDFs need OCR, not in this build).");
-    } catch (e) {
-      setError(e.message || String(e));
-      setStatus("");
-    } finally {
-      setBusy(false);
-    }
-  }, [extractFromText]);
-
   // URL intake: fetched server-side (browser CORS blocks most advisory sites),
-  // then extracted client-side. Uploaded PDFs still never leave the browser.
+  // then extracted client-side.
   const onUrl = useCallback(async () => {
     const u = url.trim();
     if (!u) return;
-    setError(""); setResult(null); setFileName("");
+    setError(""); setResult(null);
     setBusy(true);
     try {
       setStatus("Fetching…");
@@ -96,20 +78,11 @@ export default function Page() {
       <header>
         <p className="eyebrow">KTLYST Extract</p>
         <h1>Threat advisory in, grounded intel out.</h1>
-        <p className="sub">Drop a threat advisory PDF or paste a link. Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Deterministic, no LLM, no signup.</p>
+        <p className="sub">Paste a link to a threat advisory (a PDF or a web page). Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Deterministic, no LLM, no signup.</p>
       </header>
 
       <section className="controls">
-        <div className="row">
-          <label className={`drop ${busy ? "disabled" : ""}`}>
-            <input type="file" accept="application/pdf" disabled={busy}
-              onChange={(e) => onFile(e.target.files?.[0])} />
-            {fileName ? `↻ ${fileName}` : "Choose PDF"}
-          </label>
-          <span className="microtrust">100% deterministic · no LLM · no signup</span>
-        </div>
         <div className="urlrow">
-          <span className="ordiv">or</span>
           <input
             type="url"
             className="urlinput"
@@ -120,9 +93,10 @@ export default function Page() {
             onKeyDown={(e) => { if (e.key === "Enter") onUrl(); }}
           />
           <button className={`drop urlbtn ${busy || !url.trim() ? "disabled" : ""}`} onClick={onUrl} disabled={busy || !url.trim()}>
-            Extract
+            {busy ? "Working…" : "Extract"}
           </button>
         </div>
+        <span className="microtrust">100% deterministic · no LLM · no signup</span>
       </section>
 
       {status && <p className="status">{status}</p>}
@@ -147,7 +121,7 @@ function Landing() {
               <video controls playsInline poster="/demo-poster.jpg" src="/demo.mp4" /> */}
           <div className="videoplaceholder">
             <span className="playbtn" aria-hidden="true" />
-            <span className="videocap">60-second demo — drop a PDF, watch it ground</span>
+            <span className="videocap">60-second demo — paste a URL, watch it ground</span>
           </div>
         </div>
       </section>
@@ -163,7 +137,7 @@ function Landing() {
           <div className="card"><span className="tag">printed</span><h3>ATT&amp;CK IDs</h3><p>Only the technique IDs the vendor actually wrote down, asserted as ATT&amp;CK only when in the snapshot.</p></div>
           <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not KTLYST output.</p></div>
           <div className="card"><span className="tag">templated</span><h3>IOC sweep snippets</h3><p>Single-field Sigma starting points from grounded IOCs. Hunt starters, not deployable detections. The assumed field is shown to tune.</p></div>
-          <div className="card"><span className="tag">inline</span><h3>Source spans</h3><p>The exact sentence behind every fact sits right under it. The receipt is always there, never in fine print.</p></div>
+          <div className="card"><span className="tag">export</span><h3>CSV export</h3><p>One click pulls every finding into a CSV: type, value, count, and the source span that proves each one.</p></div>
         </div>
       </section>
 
@@ -173,7 +147,7 @@ function Landing() {
           <p>No key, no LLM, no signup. The extractor is a fixed set of rules, not a model.</p>
         </div>
         <div className="steps">
-          <div className="step"><span className="n">1</span><h3>Drop it or link it</h3><p>Upload a threat-advisory PDF, or paste a link to one. PDF or web page, both work.</p></div>
+          <div className="step"><span className="n">1</span><h3>Paste the link</h3><p>Paste a URL to a threat advisory. A PDF or a web page, both work.</p></div>
           <div className="step"><span className="n">2</span><h3>Deterministic extract</h3><p>Regex and curated matching pull only what is literally in the text. Same input, same output, every time.</p></div>
           <div className="step"><span className="n">3</span><h3>Every fact linked</h3><p>Each item ships with the verbatim span that proves it. Anything not provably in the source is dropped.</p></div>
         </div>
@@ -198,14 +172,54 @@ function Landing() {
   );
 }
 
+// Quote a CSV field per RFC 4180: wrap in double-quotes and double any inner ones
+// when the value has a comma, quote, or newline.
+function csvField(value) {
+  const s = value == null ? "" : String(value);
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// Flatten every finding into one CSV and trigger a download. "All the findings":
+// IOCs, named threats, printed ATT&CK ids, vendor rules, and IOC sweep snippets.
+function exportCsv(result) {
+  const rows = [["category", "type", "value", "defanged", "count", "source_span", "note"]];
+
+  for (const o of result.iocs) {
+    rows.push(["ioc", o.field_type, o.value, defang(o.value), o.count, o.source_span, ""]);
+  }
+  for (const kind of ["actors", "tools", "malware"]) {
+    for (const e of result.entities[kind] || []) {
+      rows.push(["named_threat", kind.replace(/s$/, ""), e.name, "", e.count, e.matched || "", "gazetteer match: name present, not attributed"]);
+    }
+  }
+  for (const a of result.attack_ids.filter((x) => x.in_attack)) {
+    rows.push(["attack_id", "technique", a.id, "", "", a.source_span || "", a.name || ""]);
+  }
+  for (const r of result.transcribed_rules) {
+    rows.push(["vendor_rule", r.kind, r.text, "", "", "", "verbatim from vendor, not KTLYST output"]);
+  }
+  for (const r of result.atomic_rules) {
+    rows.push(["ioc_sweep", "sigma", r.rule_yaml, "", "", r.source_span || "", `assumes ${r.category}/${r.field} (${r.match}) from ${r.field_type} ${r.value}`]);
+  }
+
+  const csv = rows.map((r) => r.map(csvField).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = "ktlyst-extract-findings.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
+}
+
 function Result({ result, copyText }) {
   const c = result.meta.counts;
-  const allIocValues = useMemo(
-    () => result.iocs.map((i) => i.value).join("\n"),
-    [result.iocs],
-  );
   const attackReal = result.attack_ids.filter((a) => a.in_attack);
   const attackOther = result.attack_ids.filter((a) => !a.in_attack);
+  const totalFindings =
+    c.iocs + c.actors + c.tools + c.malware + attackReal.length + c.transcribed_rules + c.atomic_rules;
 
   return (
     <section className="result">
@@ -215,16 +229,15 @@ function Result({ result, copyText }) {
         <span><b>{attackReal.length}</b> ATT&amp;CK</span>
         <span><b>{c.transcribed_rules}</b> vendor rules</span>
         <span><b>{c.atomic_rules}</b> sweeps</span>
+        <button className="copy exportbtn" onClick={() => exportCsv(result)} disabled={totalFindings === 0}>
+          Export CSV
+        </button>
       </div>
 
       <p className="notegood">Provenance, not opinion. Every item below is a <em>verbatim string</em> from the document, shown with its source span. This tool asserts what the report contains — never what it means, whether it is malicious, or how to detect it. It is a mechanical extractor over supported artifact types, not a complete reader: split/line-wrapped indicators, exotic defangs, internal hostnames, scanned images, and names absent from the snapshot are missed by design.</p>
 
       {result.iocs.length > 0 && (
         <Block title={`IOCs (${result.iocs.length})`}>
-          <div className="copyrow">
-            <span className="assumed">Copy the real (refanged) indicators, one per line.</span>
-            <button className="copy" onClick={() => copyText(allIocValues, "all IOCs")}>Copy all</button>
-          </div>
           <IocTable iocs={result.iocs} />
         </Block>
       )}
@@ -287,10 +300,8 @@ function Result({ result, copyText }) {
 }
 
 // IOC table. One Indicator column (the real refanged value); the proving source
-// span is shown inline under it (no separate Defanged column, no source button:
-// they duplicated the value and hid the provenance behind a click).
-// Optional AI noise-triage is opt-in: nothing calls the LLM until the user clicks
-// the button. The deterministic table is complete and usable without it.
+// span is shown inline under it. Optional AI noise-triage is opt-in: nothing calls
+// the LLM until the user clicks. The deterministic table is complete without it.
 function IocTable({ iocs }) {
   const [triage, setTriage] = useState({ status: "idle", flags: null, msg: "" });
 
