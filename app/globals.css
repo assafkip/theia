@@ -49,7 +49,11 @@ h1 {
 }
 .proof .pspan {
   display: block; margin-top: 10px; padding-left: 13px; border-left: 2px solid var(--amber);
-  color: var(--dim); font-size: 13.5px; line-height: 1.55;
+  color: var(--dim); font-size: 13.5px; line-height: 1.55; font-style: italic;
+}
+.proof .psrc {
+  display: block; margin-top: 6px; font-style: normal; font-family: var(--mono);
+  font-size: 11px; color: var(--dimmer);
 }
 
 /* analyst Q&A sections — each answers one thing the buyer actually asks */
