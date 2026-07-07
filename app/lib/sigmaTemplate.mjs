@@ -10,6 +10,7 @@
 // NOT deployable. The assumed logsource/field is a guess surfaced on each card.
 
 import { normalize } from "./grounding.mjs";
+import { refang } from "./iocExtract.mjs";
 
 // FIELD_MAP is the single source of truth for the atomic mapping. Every entry is
 // taxonomy-backed against SigmaHQ (category + field names as SigmaHQ writes them).
@@ -73,7 +74,13 @@ export function atomicSigmaForObservable(obs, pdfText) {
   // here even though String.trim() would keep it.
   if (!spanNorm || !valueNorm) return null;
   if (!pdfNorm.includes(spanNorm)) return null; // span verbatim in the doc
-  if (!spanNorm.includes(valueNorm)) return null; // value evidenced by its span
+  // Value evidenced by its span. Refang-aware (PRD-003 F5 / Codex F1): a huntable
+  // value is the REAL indicator (evil.com), but a defanged span cites evil[.]com.
+  // Refang the span (the deterministic direction — one canonical target) and accept
+  // if the value is contained in either the raw or the refanged span. The rendered
+  // rule value stays the real indicator; the card still shows the defanged span.
+  const spanRefangedNorm = normalize(refang(span));
+  if (!spanNorm.includes(valueNorm) && !spanRefangedNorm.includes(valueNorm)) return null;
 
   return {
     field_type: obs.field_type,

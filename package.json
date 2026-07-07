@@ -8,8 +8,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test app/lib/grounding.test.mjs app/lib/sigmaTemplate.test.mjs app/lib/ruleTranscribe.test.mjs",
-    "harness": "node scripts/harness.mjs"
+    "test": "node --test app/lib/grounding.test.mjs app/lib/sigmaTemplate.test.mjs app/lib/ruleTranscribe.test.mjs app/lib/iocExtract.test.mjs app/lib/entities.test.mjs app/lib/attackIds.test.mjs app/lib/extractLoop.test.mjs",
+    "harness": "node scripts/harness.mjs",
+    "gazetteer": "node scripts/build-gazetteer.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
