@@ -59,7 +59,11 @@ h1 {
 }
 
 /* ---- Results ---- */
-.result { margin-top: 34px; display: grid; gap: 22px; }
+/* grid children default to min-width:auto, so a wide IOC table would refuse to
+   shrink and blow the whole page past its container. minmax(0,1fr) + min-width:0
+   let the columns shrink and the table scroll INSIDE .tablewrap instead. */
+.result { margin-top: 34px; display: grid; gap: 22px; grid-template-columns: minmax(0, 1fr); }
+.result > * { min-width: 0; }
 .resbar {
   display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline;
   color: var(--dim); font-size: 13px; font-family: var(--mono);
@@ -101,7 +105,7 @@ h1 {
 }
 
 /* ---- IOC table (dense, mono, collapsed source spans) ---- */
-.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+.tablewrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 thead th {
   text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line-strong);
