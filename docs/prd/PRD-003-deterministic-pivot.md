@@ -1,6 +1,6 @@
 # PRD-003 — Deterministic pivot (remove the LLM; fact layer only)
 
-Status: APPROVED (Codex-triaged; 14 findings dispositioned §10) — implementation in progress
+Status: BUILT + deployed (see §11). Codex-triaged pre-impl (14 findings §10) + per-diff (5 findings §11).
 Repo: `~/projects/ktlyst-extract` (own git, Next 15, Vercel, live at https://ktlyst-extract.vercel.app)
 Builds on: PRD-001 (BYOK extract loop + v007 grounding) and PRD-002 (transcribe + atomic Sigma).
 Supersedes: the BYOK LLM extraction pass from PRD-001. The deterministic add-ons from
@@ -390,4 +390,10 @@ addressed (4 fixed, 1 deferred-with-reason).
 
 ### Deploy
 
-_(recorded after Vercel prod deploy)_
+- Vercel prod deploy READY: `dpl_GoRj6bVMUnfAiTEGSFZaLy3N311R`, target production.
+- Prod alias https://ktlyst-extract.vercel.app returns **200**; serves the new
+  deterministic build (pitch "Advisory in, hunt-ready IOCs out" present; **zero
+  `sk-ant` / BYOK references** in the HTML — the LLM path is gone from prod).
+
+Status: BUILT + deployed. Founder-gated remainder: none — the whole pipeline runs
+offline/in-browser, so there is no key-dependent half to defer (unlike PRD-001/002).
