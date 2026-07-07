@@ -118,6 +118,13 @@ export default function Page() {
 function Landing() {
   return (
     <>
+      <section className="section demo" id="see-it-run">
+        <h2 className="sech">See it run</h2>
+        <div className="videoframe">
+          <video controls playsInline preload="metadata" poster="/theia-poster.jpg" src="/theia.mp4" />
+        </div>
+      </section>
+
       <section className="section qa">
         <h2 className="q">Did it make anything up?</h2>
         <p className="a">No. Every indicator is a <b>verbatim string</b> from the document, shown with the exact line that proves it. If a value is not literally in the text, byte for byte, it is dropped, not shown. Nothing is inferred, scored, or invented.</p>
