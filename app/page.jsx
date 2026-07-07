@@ -79,9 +79,9 @@ export default function Page() {
         <p className="eyebrow">Theia</p>
         <h1>Pull the IOCs out of any threat advisory.</h1>
         <p className="sub">Paste a link, a PDF or a web page. Theia extracts every IOC, named threat, and the vendor&apos;s own detection rules, each tied to the exact line it came from. It runs on fixed rules, not a model, so the same report always gives the same output. Anything it can&apos;t find in the text, it drops.</p>
-        <div className="proof" aria-hidden="true">
-          <span className="pv"><code>185.230.63.107</code><span className="ptag">ip · straight from the source</span></span>
-          <span className="pspan">&ldquo;C2 beaconing to 185.230.63.107 over port 443, rotating endpoints roughly every ninety minutes.&rdquo;</span>
+        <div className="proof">
+          <span className="pv"><code>170.130.165.73</code><span className="ptag">ip · verbatim from the report</span></span>
+          <span className="pspan">A real Black Basta C2 address, pulled byte-for-byte from the CISA advisory. Theia only returns what the document literally contains, so it can&apos;t hand you an indicator that was never there.</span>
         </div>
       </header>
 
@@ -175,7 +175,7 @@ function exportCsv(result) {
   const rows = [["category", "type", "value", "defanged", "count", "source_span", "note"]];
 
   for (const o of result.iocs) {
-    rows.push(["ioc", o.field_type, o.value, defang(o.value), o.count, o.source_span, ""]);
+    rows.push(["ioc", o.field_type, o.value, defang(o.value), o.count, o.context || o.source_span, ""]);
   }
   for (const kind of ["actors", "tools", "malware"]) {
     for (const e of result.entities[kind] || []) {
@@ -350,13 +350,19 @@ function IocTable({ iocs }) {
 }
 
 function IocRows({ o, flag }) {
+  const ctx = o.context || o.source_span || "";
+  // "Bare" = the report listed the indicator with no surrounding text, so context
+  // collapsed to the indicator itself. Say that honestly instead of echoing it back.
+  const bare = ctx.trim() === (o.source_span || "").trim();
   return (
     <tr className={flag ? "flagged" : ""}>
       <td className="ft">{o.field_type}</td>
       <td className="val">
         <code>{o.value}</code>
         {flag && <span className="noiseflag">⚠ likely noise</span>}
-        <div className="srcline" title={o.source_span}>“{o.source_span}”</div>
+        {bare
+          ? <div className="srcline bare">in the report&apos;s IOC list, no surrounding text</div>
+          : <div className="srcline" title={ctx}>&ldquo;{ctx}&rdquo;</div>}
         {flag && <div className="noisewhy">{flag}</div>}
       </td>
       <td className="num">{o.count}</td>
