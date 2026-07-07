@@ -9,7 +9,7 @@
 // spans collapsed behind a per-row toggle.
 import { useState, useCallback, useMemo } from "react";
 import { pdfToText } from "./lib/pdfText.mjs";
-import { runExtraction, defang } from "./lib/extractLoop.js";
+import { runExtraction } from "./lib/extractLoop.js";
 
 export default function Page() {
   const [fileName, setFileName] = useState("");
@@ -163,7 +163,7 @@ function Landing() {
           <div className="card"><span className="tag">printed</span><h3>ATT&amp;CK IDs</h3><p>Only the technique IDs the vendor actually wrote down, asserted as ATT&amp;CK only when in the snapshot.</p></div>
           <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not KTLYST output.</p></div>
           <div className="card"><span className="tag">templated</span><h3>IOC sweep snippets</h3><p>Single-field Sigma starting points from grounded IOCs. Hunt starters, not deployable detections. The assumed field is shown to tune.</p></div>
-          <div className="card"><span className="tag">counted</span><h3>Source spans</h3><p>One click reveals the exact sentence behind any fact. The receipt is always there, never in fine print.</p></div>
+          <div className="card"><span className="tag">inline</span><h3>Source spans</h3><p>The exact sentence behind every fact sits right under it. The receipt is always there, never in fine print.</p></div>
         </div>
       </section>
 
@@ -286,17 +286,13 @@ function Result({ result, copyText }) {
   );
 }
 
-// IOC table with source spans collapsed behind a per-row toggle (FORK D).
+// IOC table. One Indicator column (the real refanged value); the proving source
+// span is shown inline under it (no separate Defanged column, no source button:
+// they duplicated the value and hid the provenance behind a click).
 // Optional AI noise-triage is opt-in: nothing calls the LLM until the user clicks
 // the button. The deterministic table is complete and usable without it.
 function IocTable({ iocs }) {
-  const [open, setOpen] = useState(() => new Set());
   const [triage, setTriage] = useState({ status: "idle", flags: null, msg: "" });
-  const toggle = (i) => setOpen((prev) => {
-    const next = new Set(prev);
-    next.has(i) ? next.delete(i) : next.add(i);
-    return next;
-  });
 
   const runTriage = async () => {
     setTriage({ status: "loading", flags: null, msg: "" });
@@ -335,16 +331,13 @@ function IocTable({ iocs }) {
       <div className="tablewrap">
         <table>
           <thead>
-            <tr><th>Type</th><th>Indicator</th><th>Defanged</th><th>Count</th><th>Source</th></tr>
+            <tr><th>Type</th><th>Indicator</th><th className="numh">Count</th></tr>
           </thead>
           <tbody>
             {iocs.map((o, i) => (
               <IocRows
                 key={i}
                 o={o}
-                i={i}
-                isOpen={open.has(i)}
-                toggle={toggle}
                 flag={triage.flags ? triage.flags.get(o.value) : null}
               />
             ))}
@@ -355,30 +348,18 @@ function IocTable({ iocs }) {
   );
 }
 
-function IocRows({ o, i, isOpen, toggle, flag }) {
+function IocRows({ o, flag }) {
   return (
-    <>
-      <tr className={flag ? "flagged" : ""}>
-        <td className="ft">{o.field_type}</td>
-        <td className="val">
-          <code>{o.value}</code>
-          {flag && <span className="noiseflag">⚠ likely noise</span>}
-          {flag && <div className="noisewhy">{flag}</div>}
-        </td>
-        <td className="val"><code>{defang(o.value)}</code></td>
-        <td className="num">{o.count}</td>
-        <td>
-          <button className="srcbtn" aria-expanded={isOpen} onClick={() => toggle(i)}>
-            {isOpen ? "hide ▴" : "show ▾"}
-          </button>
-        </td>
-      </tr>
-      {isOpen && (
-        <tr className="srcrow">
-          <td colSpan={5}><span className="span">“{o.source_span}”</span></td>
-        </tr>
-      )}
-    </>
+    <tr className={flag ? "flagged" : ""}>
+      <td className="ft">{o.field_type}</td>
+      <td className="val">
+        <code>{o.value}</code>
+        {flag && <span className="noiseflag">⚠ likely noise</span>}
+        <div className="srcline" title={o.source_span}>“{o.source_span}”</div>
+        {flag && <div className="noisewhy">{flag}</div>}
+      </td>
+      <td className="num">{o.count}</td>
+    </tr>
   );
 }
 
