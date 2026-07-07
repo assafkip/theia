@@ -1,13 +1,22 @@
 # KTLYST Extract
 
-Drop a threat-advisory PDF. Get structured, source-grounded intelligence back:
-executive summary, actors, TTPs (ATT&CK), tooling/malware, and IOCs — each fact
-linked to the verbatim text that proves it. Facts the model cannot ground in the
-document are **dropped**, not shipped.
+**Advisory in, hunt-ready IOCs out — in seconds, not an afternoon.**
 
-This is a sibling to the full KTLYST product, not a change to it. The enterprise
-pipeline turns one advisory into per-team deliverables; this turns one advisory
-into a clean structured extract. Fast, cheap, one page.
+Drop a threat-advisory PDF. Get every actionable artifact pulled out and linked to
+the exact line that proves it: typed IOCs (IP / domain / URL / hash / CVE / email),
+named threats (actors / tools / malware), the ATT&CK technique IDs the vendor
+printed, the vendor's own Sigma/YARA/Snort rules, and single-field Sigma sweep
+snippets. Every item is a verbatim string from the document, shown with its source
+span.
+
+**100% deterministic, 100% client-side.** No LLM, no API key, no server, no
+network — extraction runs entirely in your browser. Nothing leaves your machine.
+Free, no signup. (PRD-003 removed the LLM extraction pass; see below.)
+
+**Fact layer, not opinion layer.** This tool asserts what a report *contains* —
+never what it *means*, whether it is malicious, or how to detect it. That
+interpretation changes company to company and is the full KTLYST product's wedge
+(its per-customer LLM fleet). This is the free front-door to it.
 
 ## Detection-rule support (PRD-002)
 
@@ -34,65 +43,75 @@ truth" contract. Neither authors detection logic.
   for it. A human reviews each card; the source span is shown for exactly this
   reason. (Tracked: issue #3.)
 
-## The capability (mirrored from the interview-coach tool)
+## The capability: extract only what's provably there
 
-Same shape as the coach: **the LLM proposes, a deterministic layer is the source
-of truth.**
+Every emitted item satisfies a **byte-for-byte provenance guarantee** (PRD-003
+§2.0): `documentText.slice(start, end) === source_span`, non-empty. Nothing is
+inferred, summarized, scored, or invented — the extractors only surface strings
+that are literally in the document.
 
-| Coach | KTLYST Extract |
-|---|---|
-| `scorer.js` deterministically scores an answer | `grounding.mjs` deterministically grounds every fact |
-| The model never eyeballs the score | The model never decides what's "real" |
-| BYOK — key stays in the browser | BYOK — key stays in the browser |
+- **IOCs** (`iocExtract.mjs`) — defang-aware regex (`hxxps://evil[.]com` →
+  `https://evil.com`). TLD allowlist + filename-extension exclusion + octet/length
+  validation cut false positives.
+- **Named threats** (`entities.mjs`) — *deterministic curated matching* against a
+  vendored gazetteer (MITRE ATT&CK Groups + Software, Malpedia families). A match
+  means the name is **present**, not that the actor is attributed.
+- **Printed ATT&CK IDs** (`attackIds.mjs`) — only the technique IDs the vendor
+  wrote down, asserted as ATT&CK only when present in the snapshot.
+- **Vendor rules** (`ruleTranscribe.mjs`) + **IOC sweep snippets**
+  (`sigmaTemplate.mjs`) — unchanged from PRD-002 (one surgical refang-aware fix).
 
-`grounding.mjs` is a 1:1 port of KTLYST's v007 gate (case-sensitive substring
-containment after whitespace / PDF-line-wrap / typography normalization). If the
-model returns a fact whose `source_span` is not verbatim in the PDF, it is
-dropped.
+`grounding.mjs` (the 1:1 v007 port) is retained as a secondary sanity gate under
+the stronger slice-equality guarantee.
 
-## Run it (BYOK)
+## Run it
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
+npm run dev          # http://localhost:3000  — drop a PDF, read the extract
 ```
 
-Paste your `sk-ant-…` key (stays in your browser, never sent to our server), drop
-a PDF, read the extract.
+No key. No config. Extraction is client-side.
 
 ## Verify (no key, no network)
 
 ```bash
-npm test             # grounding + sigmaTemplate + ruleTranscribe (node --test)
-npm run harness      # offline sweep of the advisory PDFs + a 3-kind rule fixture
+npm test             # 77 tests: grounding + sigmaTemplate + ruleTranscribe +
+                     # iocExtract + entities + attackIds + extractLoop (node --test)
+npm run harness      # deterministic extraction over the 4 advisory PDFs + a 3-kind
+                     # rule fixture; asserts the §2.0 slice invariant on real bytes
+npm run gazetteer    # refresh app/lib/gazetteer.json from MITRE ATT&CK + Malpedia
 ```
 
 CI (`.github/workflows/ci.yml`) runs `npm test` + `npm run build` on every push
-and PR (Node 20 + 22). The BYOK LLM path is exercised out-of-band by
-`node scripts/smoke-live.mjs` (spends real tokens; needs a key).
+and PR (Node 20 + 22).
 
 ## Roadmap
 
-- **Phase 1 (done):** BYOK extract loop + deterministic grounding + upload UI.
-- **Phase 2:** hosted key + Supabase auth + Stripe paywall + Upstash rate limit +
-  Turnstile + PostHog — the coach's monetization stack.
-- **Later:** OCR for scanned PDFs, share links, saved history.
+- **Phase 1 (done):** BYOK LLM extract + deterministic grounding + upload UI.
+- **Phase 2 (done, PRD-003):** removed the LLM — fully deterministic, client-side,
+  free. Fact layer split from the full product's opinion layer.
+- **Later:** OCR for scanned PDFs, IPv6, STIX/MISP export, share links.
 
 ## Architecture
 
 ```
-PDF ──pdfToText──▶ text ──callMessage──▶ LLM JSON ──parseJson──▶ groundExtraction ──▶ UI
- (pdfjs, browser)          (BYOK, browser)                        (v007 port = truth)
+PDF ──pdfToText──▶ text ──▶ [ iocExtract | entities | attackIds |
+ (pdfjs, browser)             ruleTranscribe | sigmaTemplate ] ──▶ UI
+                            (deterministic; every item carries a verbatim span)
 ```
 
-- `app/lib/grounding.mjs` — deterministic v007 port (ground truth).
-- `app/lib/extractPrompt.mjs` — ported ttp_story extraction prompt.
-- `app/lib/anthropic.js` — BYOK browser client (key never hits our server).
-- `app/lib/extractLoop.js` — the loop: extract → parse → ground → atomic + transcribe.
+- `app/lib/iocExtract.mjs` — defang-aware typed IOC regex + refang/defang.
+- `app/lib/entities.mjs` — gazetteer entity matching (curated, FP-guarded).
+- `app/lib/attackIds.mjs` — printed ATT&CK technique IDs, snapshot-gated.
+- `app/lib/grounding.mjs` — deterministic v007 port (secondary sanity gate).
 - `app/lib/sigmaTemplate.mjs` — atomic Sigma templater (grounded IOC → fixed shape).
-- `app/lib/ruleTranscribe.mjs` — verbatim Sigma/YARA/Snort transcription + grounding.
+- `app/lib/ruleTranscribe.mjs` — verbatim Sigma/YARA/Snort transcription.
+- `app/lib/extractLoop.js` — the deterministic composition; lazy-loads the gazetteer.
+- `app/lib/{gazetteer,tlds,entity-stoplist}.json` — vendored data (built by
+  `scripts/build-gazetteer.mjs`).
 - `app/lib/pdfText.mjs` — PDF → text (pdfjs, browser).
 - `app/page.jsx` — the one-page UI.
 
-The PRD, its Codex review dispositions, and verification live in
-`docs/prd/PRD-002-detection-rules.md`.
+PRDs, Codex review dispositions, and verification live in `docs/prd/`
+(`PRD-002-detection-rules.md`, `PRD-003-deterministic-pivot.md`).
