@@ -72,7 +72,11 @@ function stripHtml(html) {
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<\/(p|div|br|li|tr|h[1-6]|section|article|pre|td)>/gi, "\n")
+    // Table cells become separators (not newlines) so an IOC's row survives as one
+    // line — "45.11.181[.]44 · C2 server · Black Basta" — giving the extractor real
+    // context to widen into. Only row / block ends become newlines.
+    .replace(/<\/(t[dh])>/gi, " · ")
+    .replace(/<\/(p|div|br|li|tr|h[1-6]|section|article|pre)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")

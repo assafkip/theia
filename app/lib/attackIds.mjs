@@ -6,6 +6,8 @@
 // claimed. The official technique name for a known id is a deterministic dictionary
 // lookup (NOT an opinion). Inferring an unprinted id from prose is out of scope.
 
+import { sentenceContext } from "./context.mjs";
+
 const ATTACK_RE = /\bT\d{4}(?:\.\d{3})?\b/g;
 
 // extractAttackIds(text, techniqueMap)
@@ -42,5 +44,7 @@ export function extractAttackIds(text, techniqueMap = {}) {
   }
 
   const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-  return [...byId.values()].sort((a, b) => cmp(a.id, b.id));
+  return [...byId.values()]
+    .sort((a, b) => cmp(a.id, b.id))
+    .map((it) => ({ ...it, ...sentenceContext(src, it.start, it.end) }));
 }

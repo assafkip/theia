@@ -59,6 +59,6 @@ test("dedupe by id, count occurrences, stable sort", () => {
 test("empty inputs do not throw", () => {
   assert.deepEqual(extractAttackIds("", MAP), []);
   assert.deepEqual(extractAttackIds("T1566", {}), [
-    { id: "T1566", name: null, in_attack: false, source_span: "T1566", start: 0, end: 5, count: 1 },
+    { id: "T1566", name: null, in_attack: false, source_span: "T1566", start: 0, end: 5, count: 1, context: "T1566", context_start: 0, context_end: 5 },
   ]);
 });
