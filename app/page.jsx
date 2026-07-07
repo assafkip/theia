@@ -287,39 +287,84 @@ function Result({ result, copyText }) {
 }
 
 // IOC table with source spans collapsed behind a per-row toggle (FORK D).
+// Optional AI noise-triage is opt-in: nothing calls the LLM until the user clicks
+// the button. The deterministic table is complete and usable without it.
 function IocTable({ iocs }) {
   const [open, setOpen] = useState(() => new Set());
+  const [triage, setTriage] = useState({ status: "idle", flags: null, msg: "" });
   const toggle = (i) => setOpen((prev) => {
     const next = new Set(prev);
     next.has(i) ? next.delete(i) : next.add(i);
     return next;
   });
 
+  const runTriage = async () => {
+    setTriage({ status: "loading", flags: null, msg: "" });
+    try {
+      const resp = await fetch("/api/triage", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          iocs: iocs.map((o) => ({ value: o.value, field_type: o.field_type, source_span: o.source_span })),
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || `Triage failed (${resp.status}).`);
+      const flags = new Map((data.flags || []).map((f) => [f.value, f.reason]));
+      setTriage({
+        status: "done",
+        flags,
+        msg: flags.size
+          ? `${flags.size} indicator(s) flagged as likely noise. Advisory only. Nothing was removed; review each one.`
+          : "No likely noise found. Nothing flagged.",
+      });
+    } catch (e) {
+      setTriage({ status: "error", flags: null, msg: e.message || String(e) });
+    }
+  };
+
   return (
-    <div className="tablewrap">
-      <table>
-        <thead>
-          <tr><th>Type</th><th>Indicator</th><th>Defanged</th><th>Count</th><th>Source</th></tr>
-        </thead>
-        <tbody>
-          {iocs.map((o, i) => {
-            const isOpen = open.has(i);
-            return (
-              <IocRows key={i} o={o} i={i} isOpen={isOpen} toggle={toggle} />
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="triagebar">
+        <button className="copy noisebtn" onClick={runTriage} disabled={triage.status === "loading"}>
+          {triage.status === "loading" ? "Checking…" : triage.status === "done" ? "Re-check noise" : "⚠ Flag likely noise (optional AI)"}
+        </button>
+        <span className="assumed">Off by default. The extraction above is deterministic. This optional AI pass only suggests which IOCs look like noise (a vendor footer, a reference link). Nothing is added or removed.</span>
+      </div>
+      {triage.msg && <p className={triage.status === "error" ? "error" : "notewarn"}>{triage.msg}</p>}
+      <div className="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Indicator</th><th>Defanged</th><th>Count</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            {iocs.map((o, i) => (
+              <IocRows
+                key={i}
+                o={o}
+                i={i}
+                isOpen={open.has(i)}
+                toggle={toggle}
+                flag={triage.flags ? triage.flags.get(o.value) : null}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
-function IocRows({ o, i, isOpen, toggle }) {
+function IocRows({ o, i, isOpen, toggle, flag }) {
   return (
     <>
-      <tr>
+      <tr className={flag ? "flagged" : ""}>
         <td className="ft">{o.field_type}</td>
-        <td className="val"><code>{o.value}</code></td>
+        <td className="val">
+          <code>{o.value}</code>
+          {flag && <span className="noiseflag">⚠ likely noise</span>}
+          {flag && <div className="noisewhy">{flag}</div>}
+        </td>
         <td className="val"><code>{defang(o.value)}</code></td>
         <td className="num">{o.count}</td>
         <td>

@@ -143,6 +143,18 @@ tr.srcrow td {
 }
 tr.srcrow .span { font-style: italic; }
 
+/* optional AI noise-triage (opt-in) */
+.triagebar { display: flex; align-items: baseline; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
+.triagebar .assumed { flex: 1; min-width: 240px; line-height: 1.5; }
+.noisebtn { white-space: nowrap; }
+tr.flagged td { background: var(--amber-wash); }
+.noiseflag {
+  display: inline-block; margin-left: 8px; font-size: 11px; font-family: var(--mono);
+  color: var(--amber-ink); background: var(--amber-wash); border: 1px solid #f2dca2;
+  border-radius: 999px; padding: 1px 8px; vertical-align: middle; white-space: nowrap;
+}
+.noisewhy { color: var(--amber-ink); font-size: 12px; margin-top: 4px; }
+
 .copyrow { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
 .copyrow .assumed { color: var(--dim); font-size: 13px; }
 button.copy {
