@@ -24,9 +24,22 @@ test("ip: clean and defanged, span byte-for-byte", () => {
   assertSliceEquality(text, items);
 });
 
-test("ip: octet > 255 rejected; version string rejected", () => {
-  const items = extractIocs("build v1.2.3.4 shipped; bogus 999.1.1.1 here");
-  assert.deepEqual(vals(items, "ip"), []);
+test("ip: octet > 255 rejected; version strings rejected (incl. colon form)", () => {
+  assert.deepEqual(vals(extractIocs("build v1.2.3.4 shipped"), "ip"), []);
+  assert.deepEqual(vals(extractIocs("bogus 999.1.1.1 here"), "ip"), []);
+  assert.deepEqual(vals(extractIocs("version 1.2.3.4"), "ip"), []);
+  assert.deepEqual(vals(extractIocs("version: 1.2.3.4"), "ip"), []); // Codex F5
+  assert.deepEqual(vals(extractIocs("ver. 1.2.3.4"), "ip"), []);
+  // a real IP with no version prefix still extracts
+  assert.deepEqual(vals(extractIocs("callback 8.8.4.4 seen"), "ip"), ["8.8.4.4"]);
+});
+
+test("url: comma/semicolon-separated list does NOT collapse (Codex F2)", () => {
+  const items = extractIocs("iocs: https://a.com/x,https://b.com/y;https://c.com/z");
+  assert.deepEqual(
+    vals(items, "url").sort(),
+    ["https://a.com/x", "https://b.com/y", "https://c.com/z"],
+  );
 });
 
 test("domain: clean and defanged; refang canonical", () => {

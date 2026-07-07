@@ -5,7 +5,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { extractAttackIds } from "./attackIds.mjs";
 
-const MAP = { T1566: "Phishing", T1078: "Valid Accounts", "T1078.004": "Cloud Accounts" };
+const MAP = {
+  T1566: "Phishing",
+  "T1566.002": "Spearphishing Link",
+  T1078: "Valid Accounts",
+  "T1078.004": "Cloud Accounts",
+};
 
 test("captures printed technique and sub-technique with names", () => {
   const text = "Initial access via T1566; then T1078.004 for persistence.";
@@ -27,11 +32,18 @@ test("id NOT in snapshot is flagged in_attack:false (Codex F11)", () => {
   assert.equal(out[0].name, null);
 });
 
-test("sub-technique of a known parent inherits parent name", () => {
+test("real sub-technique in the snapshot is asserted with its own name", () => {
   const out = extractAttackIds("saw T1566.002 in logs", MAP);
   assert.equal(out[0].id, "T1566.002");
   assert.equal(out[0].in_attack, true);
-  assert.equal(out[0].name, "Phishing"); // parent fallback
+  assert.equal(out[0].name, "Spearphishing Link");
+});
+
+test("fake sub-technique (parent known, sub absent) is NOT asserted (Codex F1)", () => {
+  const out = extractAttackIds("bogus T1566.999 in a table", MAP);
+  assert.equal(out[0].id, "T1566.999");
+  assert.equal(out[0].in_attack, false);
+  assert.equal(out[0].name, null);
 });
 
 test("prose with no printed id yields none", () => {

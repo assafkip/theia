@@ -354,4 +354,40 @@ Post-triage verdict: implementable. Codex re-reviews per-diff during build (§9)
 
 ## 11. Verification (build phase)
 
-_(to be filled after implementation)_
+- **§6.1 node --test:** 79/79 green (grounding 12, sigmaTemplate 16, ruleTranscribe
+  18, iocExtract 19, entities 10, attackIds 8, extractLoop 6). Covers defang round-
+  trips, FP negatives (octet>255, version incl. colon form, filename-TLD, over-length
+  hex, dashed GUID, comma/semicolon URL lists), entity FP guard + substring + up-to-5
+  spans, ATT&CK exact-hit-only assertion, and the §2.0 slice-equality invariant.
+- **§6.2 npm run build:** clean (Next 15, route `/` 11.6 kB, First Load 114 kB).
+- **§6.3 harness:** ALL GREEN over all 4 real advisories (unit42, openssh,
+  shinyhunters, cyber_triage) — real IOCs (34/6/61/4), entities, printed ATT&CK
+  (openssh 1, shinyhunters 15), **0 §2.0 slice violations**, fabricated/empty-span
+  rejection holds. 3-kind rule fixture green.
+- **§6.4 no-network:** `extractLoop.test.mjs` runs `runExtraction` with `fetch`
+  stubbed to throw and still returns a full result; removed `anthropic.js`/
+  `extractPrompt.mjs` are imported by no runtime module.
+- **§6.5 provenance:** slice-equality asserted for every extractor + every real-PDF
+  item (0 violations).
+- **§6.6 bundle:** gazetteer (191 KB raw / 47 KB gzip) is in a separate lazy chunk
+  (`476.*.js`), NOT the 114 KB route First Load — under the 250 KB gzip budget.
+
+### Codex per-diff review (implementation) — dispositions
+
+Codex `gpt-5.5` reviewed the implementation commit (ran live perf probes). 5 findings
+(4 major, 1 minor); verdict "not safe to deploy". Triaged + fixed:
+
+| # | Sev | Finding | Disposition |
+|---|-----|---------|-------------|
+| 1 | major | attackIds parent-fallback falsely asserts ATT&CK for fake sub-ids | **fixed.** `in_attack` = exact snapshot hit only; real sub-techniques are already in the snapshot. |
+| 2 | major | comma/semicolon-adjacent URLs collapse into one IOC | **fixed.** `,`/`;` excluded from URL body; list test added. |
+| 3 | major | spaced ` dot `/` at ` refanged but never matched by extraction | **deferred.** Intentional §4.1 miss (ReDoS + FP risk); documented, not a correctness bug. |
+| 4 | major | entity match = ~6k full-text scans, multi-second stall on large reports | **fixed.** First-token doc index (sound: bounded term match ⇒ first token is a bounded doc token). 1 MB benign: 1212 ms → 11 ms. |
+| 5 | minor | `version: 1.2.3.4` emits as an IP | **fixed.** Version guard allows a `:`/`.` between word and number; test added. |
+
+Post-fix: 79/79 tests green, harness ALL GREEN, build clean. Re-review verdict basis
+addressed (4 fixed, 1 deferred-with-reason).
+
+### Deploy
+
+_(recorded after Vercel prod deploy)_

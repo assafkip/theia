@@ -26,19 +26,14 @@ export function extractAttackIds(text, techniqueMap = {}) {
     const start = m.index;
     const end = start + id.length;
     const source_span = src.slice(start, end); // §2.0: byte-for-byte
+    // Assert ATT&CK ONLY on an EXACT snapshot hit (Codex impl-review F1). Real
+    // sub-techniques are already in the 697-entry snapshot; a sub-id absent from
+    // it (T1566.999) is fake/new and must NOT be asserted via a parent fallback.
     const known = Object.prototype.hasOwnProperty.call(techniqueMap, id);
-    // A sub-technique whose parent is known is still ATT&CK even if the exact sub
-    // is absent from the map; fall back to the parent name for context.
-    const parent = id.includes(".") ? id.split(".")[0] : null;
-    const name = known
-      ? techniqueMap[id]
-      : parent && Object.prototype.hasOwnProperty.call(techniqueMap, parent)
-        ? techniqueMap[parent]
-        : null;
     byId.set(id, {
       id,
-      name,
-      in_attack: known || Boolean(name),
+      name: known ? techniqueMap[id] : null,
+      in_attack: known,
       source_span,
       start,
       end,
