@@ -1,0 +1,35 @@
+# Theia
+
+> Theia extracts indicators of compromise (IOCs) from a threat intel report. Paste a link (a PDF or a web page) and it pulls every IOC, named threat, and vendor detection rule that is literally in the report, each tied to the exact line that proves it. Deterministic, no LLM, no signup. Built by KTLYST Labs (Assaf Kipnis, 12 years in threat intelligence at LinkedIn, Google, Meta, and ElevenLabs).
+
+## What this is
+Theia is a free, deterministic IOC extractor for threat intelligence reports. Paste a URL to a report (a CISA advisory, a Cisco Talos / Mandiant / Unit 42 write-up, a PDF, or a web page) and Theia pulls the IOCs (IPs, domains, URLs, file hashes, CVEs, emails), the named threats (actors, tools, malware), the printed MITRE ATT&CK technique IDs, and the vendor's own Sigma / YARA / Snort rules. Every item is a verbatim string from the document, shown with the exact source line that proves it. It runs on fixed rules, not a model, so the same report always gives the same output, and anything it cannot find in the text is dropped, never invented.
+
+## Key pages
+- [Theia](https://theia.ktlystlabs.com/): paste an intel-report URL, get grounded IOCs with the source line that proves each one, then export to CSV.
+
+## What it extracts
+- IOCs: IP, domain, URL, file hash (MD5 / SHA1 / SHA256), CVE, email. Defang-aware and refanged.
+- Named threats: actors, tools, and malware matched against a vendored MITRE ATT&CK + Malpedia gazetteer (a match means the name is present, not attributed).
+- Printed MITRE ATT&CK technique IDs (only the IDs the vendor wrote down).
+- Vendor detection rules: Sigma / YARA / Snort, pulled verbatim from the report (labeled: not Theia output).
+- Single-field Sigma "IOC sweep" starting points (hunt starters, not deployable detections).
+
+## How it is different
+Deterministic, not an LLM. Every indicator is provably present in the source, byte for byte, with the surrounding sentence shown as proof. No hallucinated indicators. Reproducible and auditable: the same report gives the same output every time, so an analyst can defend every indicator in a review. An optional AI pass can flag likely noise (the vendor's own domain, reference links, example.com) but never adds or removes an indicator.
+
+## What it is not
+Not a SIEM, not a scanner, not a deployable-detection generator. Theia asserts what a report contains (provenance), never what it means or whether something is malicious. The Sigma sweeps it templates are hunt starting points, not shipped detections.
+
+## Who it is for
+Detection engineers, threat-intel analysts, SOC and incident-response practitioners who pull IOCs out of vendor reports by hand every day.
+
+## Team
+- Assaf Kipnis, Founder, KTLYST Labs. 12 years in threat intelligence at LinkedIn, Google, Meta, and ElevenLabs.
+
+## Category
+A deterministic IOC / indicator extractor for threat intelligence reports. Free, no signup.
+
+## Contact
+- Email: cole@ktlystlabs.com
+- Website: https://theia.ktlystlabs.com

@@ -1,0 +1,30 @@
+# theia.ktlystlabs.com
+# Free tool for detection engineers and threat-intel analysts. Citation beats a
+# training-block, so AI answer engines are explicitly welcome to read and cite.
+
+User-agent: *
+Allow: /
+
+# AI answer engines (so ChatGPT, Perplexity, Claude, Gemini, Copilot can cite us)
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://theia.ktlystlabs.com/sitemap.xml
