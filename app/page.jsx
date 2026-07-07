@@ -3,7 +3,10 @@
 // PRD-003 — the whole product in one page, deterministic. Drop a PDF; every IOC,
 // named threat, printed ATT&CK id, and vendor rule is pulled from what the document
 // LITERALLY contains and shown with the exact source bytes. No key, no LLM, no
-// network: extraction runs entirely in your browser. Functional UI only.
+// network: extraction runs entirely in your browser.
+// UI: design-room design.md (2026-07-07) — light, readable, restrained. Transform
+// spine, amber accent reserved for the primary action + grounded facts, source
+// spans collapsed behind a per-row toggle.
 import { useState, useCallback, useMemo } from "react";
 import { pdfToText } from "./lib/pdfText.mjs";
 import { runExtraction, defang } from "./lib/extractLoop.js";
@@ -51,8 +54,9 @@ export default function Page() {
   return (
     <main className="wrap">
       <header>
-        <h1>KTLYST Extract</h1>
-        <p className="sub">Advisory in, hunt-ready IOCs out. Drop a threat advisory PDF and every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Runs entirely in your browser — no key, no signup, nothing leaves your machine.</p>
+        <p className="eyebrow">KTLYST Extract</p>
+        <h1>Threat PDF in, grounded intel out.</h1>
+        <p className="sub">Drop a threat advisory PDF. Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. Seconds, not an afternoon. Runs entirely in your browser — no key, no signup, nothing leaves your machine.</p>
       </header>
 
       <section className="controls">
@@ -62,6 +66,7 @@ export default function Page() {
               onChange={(e) => onFile(e.target.files?.[0])} />
             {fileName ? `↻ ${fileName}` : "Choose PDF"}
           </label>
+          <span className="microtrust">100% deterministic · client-side · no LLM</span>
         </div>
       </section>
 
@@ -69,7 +74,72 @@ export default function Page() {
       {error && <p className="error">{error}</p>}
 
       {result && <Result result={result} copyText={copyText} />}
+
+      {!result && <Landing />}
     </main>
+  );
+}
+
+// The landing content below the tool: centered demo video + how it works + what
+// it pulls out + the honesty spine. Hidden once a real extract is on screen.
+function Landing() {
+  return (
+    <>
+      <section className="demo section" id="demo">
+        <h2 className="sech">See it run</h2>
+        <div className="videoframe">
+          {/* Swap this placeholder for the recorded demo, e.g.:
+              <video controls playsInline poster="/demo-poster.jpg" src="/demo.mp4" /> */}
+          <div className="videoplaceholder">
+            <span className="playbtn" aria-hidden="true" />
+            <span className="videocap">60-second demo — drop a PDF, watch it ground</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2 className="sech">What it pulls out</h2>
+          <p>Every item is a verbatim string from the document, carrying the exact source span that proves it. Nothing is inferred, summarized, or scored.</p>
+        </div>
+        <div className="grid">
+          <div className="card"><span className="tag">typed</span><h3>IOCs</h3><p>IP, domain, URL, hash, CVE, email. Defang-aware, refanged for you. TLD and length validation cut the noise.</p></div>
+          <div className="card"><span className="tag">gazetteer</span><h3>Named threats</h3><p>Actors, tools, malware matched against MITRE ATT&amp;CK + Malpedia. A match means the name is present, not attributed.</p></div>
+          <div className="card"><span className="tag">printed</span><h3>ATT&amp;CK IDs</h3><p>Only the technique IDs the vendor actually wrote down, asserted as ATT&amp;CK only when in the snapshot.</p></div>
+          <div className="card"><span className="tag">verbatim</span><h3>Vendor rules</h3><p>The report&apos;s own Sigma / YARA / Snort, pulled byte-for-byte with copy buttons. Labeled: not KTLYST output.</p></div>
+          <div className="card"><span className="tag">templated</span><h3>IOC sweep snippets</h3><p>Single-field Sigma starting points from grounded IOCs. Hunt starters, not deployable detections. The assumed field is shown to tune.</p></div>
+          <div className="card"><span className="tag">counted</span><h3>Source spans</h3><p>One click reveals the exact sentence behind any fact. The receipt is always there, never in fine print.</p></div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2 className="sech">How it works</h2>
+          <p>No key, no LLM, no server, no network. Extraction runs entirely in your browser.</p>
+        </div>
+        <div className="steps">
+          <div className="step"><span className="n">1</span><h3>Drop the advisory</h3><p>Choose any threat-advisory PDF. The file never leaves your machine.</p></div>
+          <div className="step"><span className="n">2</span><h3>Deterministic extract</h3><p>Regex and curated matching pull only what is literally in the text. Same input, same output, every time.</p></div>
+          <div className="step"><span className="n">3</span><h3>Every fact linked</h3><p>Each item ships with the verbatim span that proves it. Anything not provably in the source is dropped.</p></div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="spine">
+          <p className="lead">Provenance, not maliciousness. This tool asserts what a report <b>contains</b> — never what it means, whether it is malicious, or how to detect it.</p>
+          <div className="spinegrid">
+            <div><h4>Drops what it can&apos;t prove</h4><p>A fact ships only if it matches the source byte-for-byte. Ungrounded claims are dropped, not shown.</p></div>
+            <div><h4>Not a detection tool</h4><p>Not a SIEM, not a deployable-detection generator. Sweep snippets are hunt starting points, never shipped rules.</p></div>
+            <div><h4>The fact layer</h4><p>Interpretation changes company to company. That is the full KTLYST product. This is the free front door.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="foot">
+        <span>KTLYST Extract — the fact layer, free and client-side.</span>
+        <span className="mono">100% deterministic · no signup · nothing leaves your machine</span>
+      </footer>
+    </>
   );
 }
 
@@ -85,33 +155,22 @@ function Result({ result, copyText }) {
   return (
     <section className="result">
       <div className="resbar">
-        <span>{c.iocs} IOCs · {c.actors + c.tools + c.malware} named · {attackReal.length} ATT&amp;CK · {c.transcribed_rules} vendor rules · {c.atomic_rules} sweeps</span>
+        <span><b>{c.iocs}</b> IOCs</span>
+        <span><b>{c.actors + c.tools + c.malware}</b> named</span>
+        <span><b>{attackReal.length}</b> ATT&amp;CK</span>
+        <span><b>{c.transcribed_rules}</b> vendor rules</span>
+        <span><b>{c.atomic_rules}</b> sweeps</span>
       </div>
 
-      <p className="notegood">Provenance, not opinion. Every item below is a verbatim string from the document, shown with its source span. This tool asserts what the report <em>contains</em> — never what it <em>means</em>, whether it is malicious, or how to detect it. It is a mechanical extractor over supported artifact types, not a complete reader: split/line-wrapped indicators, exotic defangs, internal hostnames, scanned images, and names absent from the snapshot are missed by design.</p>
+      <p className="notegood">Provenance, not opinion. Every item below is a <em>verbatim string</em> from the document, shown with its source span. This tool asserts what the report contains — never what it means, whether it is malicious, or how to detect it. It is a mechanical extractor over supported artifact types, not a complete reader: split/line-wrapped indicators, exotic defangs, internal hostnames, scanned images, and names absent from the snapshot are missed by design.</p>
 
       {result.iocs.length > 0 && (
         <Block title={`IOCs (${result.iocs.length})`}>
-          <div className="rulehead">
+          <div className="copyrow">
             <span className="assumed">Copy the real (refanged) indicators, one per line.</span>
-            <button onClick={() => copyText(allIocValues, "all IOCs")}>Copy all</button>
+            <button className="copy" onClick={() => copyText(allIocValues, "all IOCs")}>Copy all</button>
           </div>
-          <div className="tablewrap">
-            <table>
-              <thead><tr><th>Type</th><th>Indicator</th><th>Defanged</th><th>Source span (verbatim)</th><th>×</th></tr></thead>
-              <tbody>
-                {result.iocs.map((o, i) => (
-                  <tr key={i}>
-                    <td className="ft">{o.field_type}</td>
-                    <td className="val"><code>{o.value}</code></td>
-                    <td className="val"><code>{defang(o.value)}</code></td>
-                    <td className="span">“{o.source_span}”</td>
-                    <td className="ft">{o.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <IocTable iocs={result.iocs} />
         </Block>
       )}
 
@@ -139,12 +198,12 @@ function Result({ result, copyText }) {
 
       {result.transcribed_rules.length > 0 && (
         <Block title={`Rules found in this report — verbatim from the vendor (${result.transcribed_rules.length})`}>
-          <p className="notegood">The report&apos;s own Sigma/YARA/Snort rules, pulled byte-for-byte when structurally recognized. Not KTLYST output.</p>
+          <p className="notegood">The report&apos;s own Sigma/YARA/Snort rules, pulled byte-for-byte when structurally recognized. <em>Not KTLYST output.</em></p>
           {result.transcribed_rules.map((r, i) => (
             <div key={i} className="rulecard">
               <div className="rulehead">
                 <span className={`kind ${r.kind}`}>{r.kind}</span>
-                <button onClick={() => copyText(r.text, `${r.kind} rule`)}>Copy</button>
+                <button className="copy" onClick={() => copyText(r.text, `${r.kind} rule`)}>Copy</button>
               </div>
               <pre className="rulebody">{r.text}</pre>
             </div>
@@ -160,7 +219,7 @@ function Result({ result, copyText }) {
               <div className="rulehead">
                 <span className="kind sigma">sigma</span>
                 <span className="assumed">assumes <code>{r.category}</code> · <code>{r.field}</code> ({r.match})</span>
-                <button onClick={() => copyText(r.rule_yaml, "Sigma rule")}>Copy</button>
+                <button className="copy" onClick={() => copyText(r.rule_yaml, "Sigma rule")}>Copy</button>
               </div>
               <pre className="rulebody">{r.rule_yaml}</pre>
               <div className="ruletrace">from grounded {r.field_type}: <code>{r.value}</code> — “{r.source_span}”</div>
@@ -169,6 +228,57 @@ function Result({ result, copyText }) {
         </Block>
       )}
     </section>
+  );
+}
+
+// IOC table with source spans collapsed behind a per-row toggle (FORK D).
+function IocTable({ iocs }) {
+  const [open, setOpen] = useState(() => new Set());
+  const toggle = (i) => setOpen((prev) => {
+    const next = new Set(prev);
+    next.has(i) ? next.delete(i) : next.add(i);
+    return next;
+  });
+
+  return (
+    <div className="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Type</th><th>Indicator</th><th>Defanged</th><th>Count</th><th>Source</th></tr>
+        </thead>
+        <tbody>
+          {iocs.map((o, i) => {
+            const isOpen = open.has(i);
+            return (
+              <IocRows key={i} o={o} i={i} isOpen={isOpen} toggle={toggle} />
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function IocRows({ o, i, isOpen, toggle }) {
+  return (
+    <>
+      <tr>
+        <td className="ft">{o.field_type}</td>
+        <td className="val"><code>{o.value}</code></td>
+        <td className="val"><code>{defang(o.value)}</code></td>
+        <td className="num">{o.count}</td>
+        <td>
+          <button className="srcbtn" aria-expanded={isOpen} onClick={() => toggle(i)}>
+            {isOpen ? "hide ▴" : "show ▾"}
+          </button>
+        </td>
+      </tr>
+      {isOpen && (
+        <tr className="srcrow">
+          <td colSpan={5}><span className="span">“{o.source_span}”</span></td>
+        </tr>
+      )}
+    </>
   );
 }
 

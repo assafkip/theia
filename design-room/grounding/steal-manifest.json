@@ -1,0 +1,37 @@
+{
+  "references": ["maltego", "kali"],
+  "techniques": [
+    {
+      "id": "one-warm-accent-on-cool-field",
+      "technique": "near-monochrome cool technical field broken by ONE reserved warm accent on the single most important element",
+      "reference": "maltego (#ffb30f on #303849) + kali (#fea44c CTA on #367BF0/#010409 field)",
+      "role": "primary action + the grounded/proven mark",
+      "import": ["--accent-warm token"],
+      "applied": ["(class|var)\\(?--accent-warm", "background:\\s*#(ffb30f|fea44c|ff)"]
+    },
+    {
+      "id": "colored-focal-shadow",
+      "technique": "one COLORED accent shadow/glow on the focal element (not gray drop-shadows everywhere)",
+      "reference": "maltego 10px 10px #ffb30f hard-offset + kali drop-shadow 20px 20px 20px #153f86 dragon glow",
+      "role": "focal element only",
+      "import": ["box-shadow|drop-shadow with accent hex"],
+      "applied": ["(box-shadow|drop-shadow)[^;]*#(ffb30f|fea44c|153f86|[0-9a-fA-F]{6})"]
+    },
+    {
+      "id": "restraint-weight-headline",
+      "technique": "authority via a light-weight, tight-tracked headline (not heavy shouting weight)",
+      "reference": "maltego H1 weight 300 / -2px / 78px; kali H1 weight 400",
+      "role": "hero h1",
+      "import": ["font-weight:\\s*(300|400)"],
+      "applied": ["font-weight:\\s*(300|400)", "letter-spacing:\\s*-"]
+    },
+    {
+      "id": "mono-for-evidence",
+      "technique": "real monospace face reserved for machine truth (IOCs, rules, verbatim source spans)",
+      "reference": "maltego Roboto Mono; kali system mono; product need = IOC/rule/span fidelity",
+      "role": "code/ioc/span surfaces",
+      "import": ["--mono token", "font-family.*mono"],
+      "applied": ["font-family:\\s*var\\(--mono", "class=\\\"?(mono|code|span|val|ioc|rule)"]
+    }
+  ]
+}

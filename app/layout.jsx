@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "KTLYST Extract — grounded intel from any advisory",
+  title: "KTLYST Extract — threat PDF in, grounded intel out",
   description:
-    "Drop a threat advisory PDF, get structured source-grounded intelligence. Every fact is checked against the document; fabricated ones are dropped.",
+    "Drop a threat advisory PDF. Every observable, named threat, and vendor rule is pulled out and linked to the exact line that proves it. 100% deterministic, client-side, no LLM.",
 };
 
 export default function RootLayout({ children }) {

@@ -1,0 +1,10 @@
+{
+  "subject": "maltego + kali (reference bar — the ceiling the two teardowns jointly set)",
+  "_note": "Two references. The build aims at this craft ceiling; the concept fork (forks.md ## Concepts) decides whether the approach lands as type-led (Maltego) or character/subject-led (Kali). check_design_diff flags only craft GAPS (empty subject / uncomposed / default / invalid approach), not approach mismatch — so the build clears as long as it reaches this ceiling on all four axes.",
+  "design_decisions": {
+    "hero_subject": "a bespoke focal figure that carries the product's one idea — grounded in the references as either an animated hero word (Maltego amber typewriter) or a character/mascot-scale subject (Kali dragon); for THIS product the candidate figure is the source-span receipt / grounding act itself, made visible",
+    "composition": "a single off-center focal point over a trust-carrier (Maltego: H1 over an auto-scrolling client-logo carousel; Kali: dragon+headline over a 100vh tinted banner), generous negative space, one warm accent hit marking the focal element",
+    "art_direction_approach": "character",
+    "bespoke_vs_default": "bespoke"
+  }
+}
