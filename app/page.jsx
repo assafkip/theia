@@ -77,11 +77,11 @@ export default function Page() {
     <main className="wrap">
       <header>
         <p className="eyebrow">Theia</p>
-        <h1>Pull the IOCs out of any threat advisory.</h1>
+        <h1>Pull the IOCs out of a threat intel report.</h1>
         <p className="sub">Paste a link, a PDF or a web page. Theia extracts every IOC, named threat, and the vendor&apos;s own detection rules, each tied to the exact line it came from. It runs on fixed rules, not a model, so the same report always gives the same output. Anything it can&apos;t find in the text, it drops.</p>
         <div className="proof">
           <span className="pv"><code>170.130.165.73</code><span className="ptag">ip · verbatim from the report</span></span>
-          <span className="pspan">A real Black Basta C2 address, pulled byte-for-byte from the CISA advisory. Theia only returns what the document literally contains, so it can&apos;t hand you an indicator that was never there.</span>
+          <span className="pspan">A real Black Basta C2 address, pulled byte-for-byte from a CISA intel report. Theia only returns what the document literally contains, so it can&apos;t hand you an indicator that was never there.</span>
         </div>
       </header>
 
@@ -90,7 +90,7 @@ export default function Page() {
           <input
             type="url"
             className="urlinput"
-            placeholder="Paste an advisory URL (PDF or web page)"
+            placeholder="Paste an intel report URL (PDF or web page)"
             value={url}
             disabled={busy}
             onChange={(e) => setUrl(e.target.value)}
