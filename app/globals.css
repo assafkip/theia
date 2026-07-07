@@ -18,6 +18,20 @@ html, body {
 }
 .wrap { max-width: 900px; margin: 0 auto; padding: 56px 22px 96px; }
 
+/* GitHub star pill (top of page) */
+.topbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+.starpill {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 14px;
+  font-size: 13px; color: var(--ink); background: var(--panel); transition: border-color .12s ease;
+}
+.starpill:hover { border-color: var(--amber); }
+.starpill svg { color: var(--amber-ink); }
+.starcount {
+  font-family: var(--mono); color: var(--dim); font-size: 12px;
+  border-left: 1px solid var(--line); padding-left: 8px;
+}
+
 /* ---- Hero (Transform spine, motion-light, authority via restraint) ---- */
 header { margin-bottom: 34px; }
 .eyebrow {

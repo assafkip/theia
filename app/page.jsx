@@ -6,7 +6,7 @@
 // bytes. The URL is fetched server-side (app/api/fetch-url); extraction runs
 // client-side. UI: design-room design.md — light, readable, restrained. Transform
 // spine, amber accent, inline source spans, export-all-to-CSV.
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { pdfToText } from "./lib/pdfText.mjs";
 import { runExtraction, defang } from "./lib/extractLoop.js";
 
@@ -27,6 +27,7 @@ export default function Page() {
     setStatus("Extracting…");
     const r = await runExtraction({ documentText: text });
     setResult(r);
+    window.posthog?.capture?.("extract", { iocs: r?.meta?.counts?.iocs ?? 0 });
     setStatus("");
   }, []);
 
@@ -75,6 +76,9 @@ export default function Page() {
 
   return (
     <main className="wrap">
+      <div className="topbar">
+        <StarPill />
+      </div>
       <header>
         <p className="eyebrow">Theia</p>
         <h1>Pull the IOCs out of a threat intel report.</h1>
@@ -110,6 +114,32 @@ export default function Page() {
 
       {!result && <Landing />}
     </main>
+  );
+}
+
+// GitHub star pill (top of the page). Live count from /api/stars (server-cached);
+// degrades to just "Star on GitHub" if the count can't be fetched.
+function StarPill() {
+  const [stars, setStars] = useState(null);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/stars").then((r) => r.json()).then((d) => { if (live) setStars(d.stars); }).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  return (
+    <a
+      className="starpill"
+      href="https://github.com/assafkip/theia"
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => window.posthog?.capture?.("github_star_click")}
+    >
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
+        <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z" />
+      </svg>
+      <span>Star on GitHub</span>
+      {stars != null && <span className="starcount">{stars}</span>}
+    </a>
   );
 }
 
@@ -199,6 +229,7 @@ function exportCsv(result) {
     rows.push(["ioc_sweep", "sigma", r.rule_yaml, "", "", r.source_span || "", `assumes ${r.category}/${r.field} (${r.match}) from ${r.field_type} ${r.value}`]);
   }
 
+  window.posthog?.capture?.("export_csv", { rows: rows.length - 1 });
   const csv = rows.map((r) => r.map(csvField).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const href = URL.createObjectURL(blob);
@@ -303,6 +334,7 @@ function IocTable({ iocs }) {
   const [triage, setTriage] = useState({ status: "idle", flags: null, msg: "" });
 
   const runTriage = async () => {
+    window.posthog?.capture?.("noise_flag");
     setTriage({ status: "loading", flags: null, msg: "" });
     try {
       const resp = await fetch("/api/triage", {

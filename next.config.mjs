@@ -7,10 +7,10 @@
 // challenges.cloudflare.com — same as the coach.
 const csp = [
   "default-src 'self'",
-  "connect-src 'self' https://api.anthropic.com",
-  "img-src 'self' data:",
+  "connect-src 'self' https://api.anthropic.com https://us.i.posthog.com https://us-assets.i.posthog.com",
+  "img-src 'self' data: https://us.i.posthog.com",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us-assets.i.posthog.com",
   "font-src 'self' data:",
   "worker-src 'self' blob:",
   "object-src 'none'",
