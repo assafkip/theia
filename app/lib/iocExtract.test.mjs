@@ -104,6 +104,26 @@ test("file_hash: over-length hex run yields NO hash (Codex F7)", () => {
   assert.deepEqual(vals(items, "file_hash"), []);
 });
 
+test("file_hash: sha256 wrapped across a line is reassembled", () => {
+  const sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+  // PDF-style wrap: 64 hex split as 40 + 24 across a newline with leading spaces.
+  const wrapped = `hash:\n${sha256.slice(0, 40)}\n    ${sha256.slice(40)}\nend`;
+  const items = extractIocs(wrapped);
+  const h = only(items, "file_hash").find((i) => i.value === sha256);
+  assert.ok(h, "wrapped sha256 should reassemble");
+  // Provenance: the span is the verbatim wrap, so slice-equality still holds.
+  assert.equal(wrapped.slice(h.start, h.end), h.source_span);
+  assert.ok(h.source_span.includes("\n"), "span keeps the wrap verbatim");
+});
+
+test("file_hash: two adjacent md5s are NOT joined into a fake sha256", () => {
+  const a = "d41d8cd98f00b204e9800998ecf8427e"; // 32
+  const b = "5d41402abc4b2a76b9719d911017c592"; // 32
+  const items = extractIocs(`known-good:\n${a}\n${b}\n`);
+  const vs = vals(items, "file_hash").sort();
+  assert.deepEqual(vs, [a, b].sort()); // both md5s, no 64-char merge
+});
+
 test("file_hash: dashed GUID not a hash", () => {
   const items = extractIocs("id 550e8400-e29b-41d4-a716-446655440000 here");
   assert.deepEqual(vals(items, "file_hash"), []);

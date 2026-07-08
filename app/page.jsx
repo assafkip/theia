@@ -167,7 +167,7 @@ function Landing() {
 
       <section className="section qa">
         <h2 className="q">What does it miss?</h2>
-        <p className="a">It is a mechanical extractor, not a complete reader. Split or line-wrapped indicators, exotic defangs, internal hostnames, values inside screenshots, and names absent from the snapshot are <b>missed by design</b>. The source span is shown on every item so its blind spots are visible, not hidden.</p>
+        <p className="a">First, what it never does: <b>invent an indicator</b>. Every value is verbatim from the text with the line that proves it, so nothing it returns needs re-checking against the source. What it can&apos;t parse, it <b>names instead of hiding</b>: exotic defangs, values inside screenshots, internal hostnames, and names absent from the snapshot. Line-wrapped hashes are now reassembled; other split indicators still need a human eye. You trust every row, and you know exactly where to look yourself. Provenance first, not a complete reader.</p>
       </section>
 
       <section className="section qa">
