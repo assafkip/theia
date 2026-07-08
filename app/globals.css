@@ -206,6 +206,11 @@ tr.flagged td { background: var(--amber-wash); }
   border-radius: 999px; padding: 1px 8px; vertical-align: middle; white-space: nowrap;
 }
 .noisewhy { color: var(--amber-ink); font-size: 12px; margin-top: 4px; }
+.benignflag {
+  display: inline-block; margin-left: 8px; font-size: 11px; font-family: var(--mono);
+  color: var(--dim); background: var(--wash); border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 1px 8px; vertical-align: middle; white-space: nowrap;
+}
 
 .copyrow { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; flex-wrap: wrap; }
 .copyrow .assumed { color: var(--dim); font-size: 13px; }

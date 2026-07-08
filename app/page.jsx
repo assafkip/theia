@@ -212,7 +212,10 @@ function exportCsv(result) {
   const rows = [["category", "type", "value", "defanged", "count", "source_span", "note"]];
 
   for (const o of result.iocs) {
-    rows.push(["ioc", o.field_type, o.value, defang(o.value), o.count, o.context || o.source_span, ""]);
+    const note = o.section_hint === "benign"
+      ? `deconfliction/known-good section${o.section_heading ? `: ${o.section_heading}` : ""}`
+      : "";
+    rows.push(["ioc", o.field_type, o.value, defang(o.value), o.count, o.context || o.source_span, note]);
   }
   for (const kind of ["actors", "tools", "malware"]) {
     for (const e of result.entities[kind] || []) {
@@ -399,6 +402,14 @@ function IocRows({ o, flag }) {
       <td className="val">
         <code>{o.value}</code>
         {flag && <span className="noiseflag">⚠ likely noise</span>}
+        {o.section_hint === "benign" && (
+          <span
+            className="benignflag"
+            title={o.section_heading ? `under "${o.section_heading}"` : "under a deconfliction / known-good heading"}
+          >
+            deconfliction section
+          </span>
+        )}
         {bare
           ? <div className="srcline bare">in the report&apos;s IOC list, no surrounding text</div>
           : <div className="srcline" title={ctx}>&ldquo;{ctx}&rdquo;</div>}
