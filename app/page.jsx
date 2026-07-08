@@ -167,7 +167,7 @@ function Landing() {
 
       <section className="section qa">
         <h2 className="q">What does it miss?</h2>
-        <p className="a">First, what it never does: <b>invent an indicator</b>. Every value is verbatim from the text with the line that proves it, so nothing it returns needs re-checking against the source. What it can&apos;t parse, it <b>names instead of hiding</b>: exotic defangs, values inside screenshots, internal hostnames, and names absent from the snapshot. Line-wrapped hashes are now reassembled; other split indicators still need a human eye. You trust every row, and you know exactly where to look yourself. Provenance first, not a complete reader.</p>
+        <p className="a">What it never does: <b>invent an indicator</b>. Every value comes back verbatim with the exact line that proves it, so you are never chasing a hash that was never in the document. Defanged IOCs, line-wrapped hashes, values buried in tables, it pulls them and cites each one. What lives only inside a screenshot it <b>leaves alone rather than guess</b>. Reading by hand, you miss indicators, you can&apos;t prove where any of them came from, and it stops scaling after a few reports. This gives you the full set with a receipt on every row, in seconds.</p>
       </section>
 
       <section className="section qa">
