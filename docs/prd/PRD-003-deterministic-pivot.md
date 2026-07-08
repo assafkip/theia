@@ -1,6 +1,7 @@
 # PRD-003 — Deterministic pivot (remove the LLM; fact layer only)
 
 Status: BUILT + deployed (see §11). Codex-triaged pre-impl (14 findings §10) + per-diff (5 findings §11).
+Post-ship additions 2026-07-07 (deconfliction tagging, line-wrap hash reassembly, copy reframe): see §12.
 Repo: `~/projects/ktlyst-extract` (own git, Next 15, Vercel, live at https://ktlyst-extract.vercel.app)
 Builds on: PRD-001 (BYOK extract loop + v007 grounding) and PRD-002 (transcribe + atomic Sigma).
 Supersedes: the BYOK LLM extraction pass from PRD-001. The deterministic add-ons from
@@ -232,7 +233,8 @@ Kept as shipped in PRD-002 EXCEPT one tested change forced by Codex F1 (critical
 The tool states, visibly, what it does NOT catch — so "complete" is never implied:
 
 - IOCs split across PDF line-wraps or with injected spaces/zero-width chars; exotic defangs
-  (Unicode fullwidth dots); hashes reflowed mid-token.
+  (Unicode fullwidth dots). NOTE (§12 addendum, 2026-07-07): line-wrapped **hashes** now
+  reassemble; other split indicator types (URLs, domains) are still a miss.
 - Internal/private hostnames, AD domains, appliance-local names (public DNS + `.onion` only).
 - Named actors/tools/malware absent from the vendored gazetteer snapshot (new/renamed).
 - Vendor rules that survive PDF-to-text only when structurally recognized (fenced or clearly
@@ -397,3 +399,53 @@ addressed (4 fixed, 1 deferred-with-reason).
 
 Status: BUILT + deployed. Founder-gated remainder: none — the whole pipeline runs
 offline/in-browser, so there is no key-dependent half to defer (unlike PRD-001/002).
+
+## 12. Post-ship addendum (2026-07-07) — public-repo feedback loop
+
+Driven by two practitioner questions on the tool (regex? deconfliction of benign IOCs?)
+and a Reddit-style "missed by design reads as unreliable" objection. All shipped to
+`master` and pushed (github.com/assafkip/theia); tests + `next build` green each commit.
+
+### Shipped
+
+1. **Deterministic deconfliction / benign-section tagging** (commit `f3c1dcb`).
+   - New `app/lib/section.mjs`: bounded backward heading scan. If the nearest section
+     heading above an indicator reads benign/known-good (`deconfliction`, `testing`,
+     `false positive`, `whitelist`, …), it tags the item `section_hint: "benign"` with the
+     verbatim heading. A THREAT heading scanning backward wins, so an IOC-list item is
+     never mislabeled. **Tag-only, never removes** — extract-all + human-decides holds.
+   - Surfaced as a neutral badge in the results table + a `note` column in CSV export.
+   - Tests: `app/lib/section.test.mjs` (6). Threat-wins and benign-word-in-prose cases.
+
+2. **Line-wrapped hash reassembly** (commit `e0ff72c`).
+   - `app/lib/iocExtract.mjs`: `RE.hashWrap` rejoins two hex runs split by a newline when
+     the combined length ∈ {32,40,64} AND not both fragments are already valid hash
+     lengths (that = two separate hashes on adjacent lines, never merged → no invented
+     IOC). Fragment matches inside a wrap span are suppressed (half a sha256 ≠ a sha1).
+     Span stays the verbatim wrap, so §2.0 slice-equality holds.
+   - Documented tradeoff: a real md5 immediately followed by a short (<valid-length) hex
+     token on the next line could merge; rare in threat reports, accepted.
+
+3. **Copy reframe** (commits `e0ff72c`, `73dd651`).
+   - "What does it miss?" rewritten. Dropped "not a complete reader / still needs a human
+     eye" — it conceded the frame. New frame: manual reading is the weak option
+     (miss-prone, unprovable, doesn't scale); the tool is the reliable cited floor. Honesty
+     spine kept on the one hard boundary (screenshots): "leaves alone rather than guess."
+
+### Open follow-ups (recommended, NOT built)
+
+- **Reject log** (highest leverage). The extractor already makes silent rejection calls
+  (version strings via the `v/ver/version` guard, filename-TLD lookalikes, over-length hex).
+  Surface them with reasons so a "skip" is visible + overridable, not silent. This is the
+  real answer to "how do I know nothing was skipped" for the matched-then-rejected class.
+- **Source highlighting.** Render the full report text with every extracted span painted, so
+  the analyst's eye catches an unhighlighted indicator. Reunites tool precision with human
+  recall. More work than the reject log.
+
+### Epistemics note (for future positioning)
+
+"How do I know nothing was skipped?" has no per-report proof for ANY extractor (an LLM is
+worse: skips AND invents, non-deterministically). The honest answer: determinism makes the
+miss surface a FIXED, published, open-source set — knowable once from the rules, not a random
+per-report function. Three skip classes: matched-then-rejected (fixable via reject log),
+never-matched-a-rule (knowable from the spec), not-in-the-text (upstream, e.g. screenshots).
