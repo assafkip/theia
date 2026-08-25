@@ -1,0 +1,12 @@
+# Theia
+
+> Extract every IOC from a threat intel report, deterministically. Paste a link and get indicators provably present in the source, each tied to the exact line that proves it.
+
+Theia is a free, no-signup web tool for threat-intelligence analysts. Extraction is a fixed rule set (regex plus curated matching), not a model, so the same report always yields the same output and nothing is inferred or invented. Every indicator ships with its proving sentence. Live at https://theia.ktlystlabs.com
+
+## What it extracts
+
+- IOCs: IP, domain, URL, file hashes (MD5/SHA1/SHA256), CVE, email; defang-aware
+- Named threats and vendor detection rules referenced in the report
+
+Deterministic extraction means reproducible, auditable output you can defend when pushing an indicator to a blocklist.
