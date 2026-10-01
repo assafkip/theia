@@ -1,4 +1,6 @@
 name: CI
+# full-suite-exempt: 19s measured on run 32912772563 (2026-08-25)
+# RULE-2026-10-01-A: this whole suite is small enough to run on every PR and push. Re-measure if it grows past 60s.
 
 on:
   push:
